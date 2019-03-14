@@ -55,11 +55,12 @@ class NetworkInterface:
         self.udpPort = port
         self.contextMouse = context
 
-    def initSocket(self, port=udpPort):
+    def initSocket(self):
         self.socketUdp = socket(AF_INET, SOCK_DGRAM)
         self.myIPAddr = gethostbyname(gethostname())
         network = self.myIPAddr.split('.')[0:3];network.append('255')
         self.broadcastAddr = '.'.join(network)
+        self.socketUdp.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self.socketUdp.bind(('', self.udpPort))
         self.setBroadcastEnable()
 

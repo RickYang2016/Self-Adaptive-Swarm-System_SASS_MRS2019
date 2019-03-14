@@ -18,6 +18,8 @@ class Strategy_SRSS(Strategy):
 	local_energy_level = 100
 	local_direction = [1, 0]			# Direction vector: not necessary to be normalized
 	local_coordinate = [0, 0]
+	local_step_size = 1
+	local_go_interval = 0.5
 	local_round = 0
 	local_stage = 'end'
 	local_step = 0
@@ -33,17 +35,25 @@ class Strategy_SRSS(Strategy):
 
 	local_debugger = None
 
-	def __init__(self, id, coordinate, direction, num_robots, controlNet):
+	def __init__(self, id, \
+				coordinate=[50, 50], \
+				direction=[1, 1], \
+				step_size=1, \
+				go_interval=0.5, \
+				num_robots=1, \
+				controlNet='172.16.0.254'):
 		self.local_id = id
 		self.local_coordinate = coordinate
 		self.local_direction = direction
+		self.local_step_size = step_size
+		self.local_go_interval = go_interval
 		self.global_num_robots = num_robots
 		self.controlNet = controlNet
-		self.network = NetworkInterface()
+		self.network = NetworkInterface(port=19999)
 		self.network.initSocket()
 		self.network.startReceiveThread()
 		# Debugger tool:
-		self.local_debugger = COREDebuggerVirtual(('127.0.0.1', 12888))
+		self.local_debugger = COREDebuggerVirtual((controlNet, 12888))
 
 	def checkFinished(self):
 		return False
@@ -67,7 +77,7 @@ class Strategy_SRSS(Strategy):
 			# if new tasks are released: local_stage -> 'start'
 		else:
 			print('Unknown state.')
-		time.sleep(0.5)
+		time.sleep(self.local_go_interval)
 
 	def global_condition_func(self, recv_data):
 		# TODO: 
@@ -118,6 +128,9 @@ class Strategy_SRSS(Strategy):
 				else:
 					continue
 		self.selection_execution()
+
+	def selection_execution(self):
+		pass
 			
 	def check_recv_all_energy(self, recv_data):
 		try:
@@ -211,12 +224,12 @@ class Strategy_SRSS(Strategy):
 	def walk_one_step(self):
 		L2norm = math.sqrt(self.local_direction[0] * self.local_direction[0] + self.local_direction[1] * self.local_direction[1])
 		if L2norm != 0:
-			self.local_coordinate[0] = self.local_coordinate[0] + self.local_direction[0] / L2norm
-			self.local_coordinate[1] = self.local_coordinate[1] + self.local_direction[1] / L2norm
+			self.local_coordinate[0] = self.local_coordinate[0] + self.local_step_size * self.local_direction[0] / L2norm
+			self.local_coordinate[1] = self.local_coordinate[1] + self.local_step_size * self.local_direction[1] / L2norm
 			core_cmd = "coresendmsg -a %s node number=%s xpos=%s ypos=%s" % (self.controlNet, \
 																		self.local_id, \
-																		str(self.local_coordinate[0]), \
-																		str(self.local_coordinate[1]))
+																		str(int(self.local_coordinate[0])), \
+																		str(int(self.local_coordinate[1])))
 			self.local_debugger.send_to_monitor(core_cmd)
 			os.system(core_cmd)
 		else:
@@ -225,7 +238,13 @@ class Strategy_SRSS(Strategy):
 		
 
 if __name__ == '__main__':
-	strategy_SRSS = Strategy_SRSS(id=1, coordinate=[50, 50], direction=[1, 1], num_robots=1, controlNet='172.16.0.254')
+	strategy_SRSS = Strategy_SRSS(id=1, \
+								coordinate=[50, 50], \
+								direction=[1, 3], \
+								step_size=10, \
+								go_interval=0.5, \
+								num_robots=1, \
+								controlNet='172.16.0.254')
 	while not strategy_SRSS.checkFinished():
 		strategy_SRSS.go()
 
