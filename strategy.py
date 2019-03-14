@@ -173,6 +173,10 @@ class Strategy_SRSS(Strategy):
 		# the results are stored in 'self.global_energy_level'
 		# TODO: 
 		# 	generate the queue based on energy and put it into 'self.local_queue'
+		if self.local_negotiation == 1:
+			self.local_queue = i[0] for i in sorted(self.global_energy_level.item(), key=lambda x:x[1])
+		elif self.local_negotiation == 2:
+			self.local_queue = sorted(self.global_energy_level.iteritems(), key=lambda x:(x[1], x[0]), reverse = True)
 		self.global_energy_level = {}
 
 	# Step2: Exchange priority queue
@@ -183,6 +187,11 @@ class Strategy_SRSS(Strategy):
 		# the results are stored in 'self.global_negotiation_queue'
 		# TODO: 
 		# 	compare the queue and put it into 'self.local_negotiation_result'
+		for key in self.global_negotiation_queue.keys():
+			if self.local_queue == self.global_negotiation_queue[key]:
+				self.local_negotiation_result = True
+			else:
+				self.local_negotiation_result = False
 		self.global_negotiation_queue = {}
 		return is_negotiation
 
@@ -194,6 +203,11 @@ class Strategy_SRSS(Strategy):
 		# the results are stored in 'self.global_agreement'
 		# TODO: 
 		# 	Check if all the agreement results are 'True', set is_agreement = True / False
+		is_agreement = True
+		for value in self.global_agreement.values():
+			if value == False:
+				is_agreement = False
+				break
 		self.global_negotiation_queue = {}
 		return is_agreement
 
