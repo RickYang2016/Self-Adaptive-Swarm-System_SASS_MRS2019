@@ -7,6 +7,7 @@ from COREDebugger import COREDebuggerVirtual
 import time
 import os
 import math
+import sys
 
 class Strategy_SRSS(Strategy):
 	network = None
@@ -29,6 +30,7 @@ class Strategy_SRSS(Strategy):
 
 	global_num_robots = 1
 	global_num_tasks = 0
+	global_min_require_robots = 1
 	global_energy_level = {}			# {'1': 100, '2': 99, '3': 85, ...}
 	global_negotiation_queue = {}		# {'1': [3, 1, 2], '2': [3, 2, 1], '3': [3, 1, 2], ...}
 	global_agreement = {}				# {'1': True, '2': False, '3': True, ...}
@@ -130,7 +132,31 @@ class Strategy_SRSS(Strategy):
 		self.selection_execution()
 
 	def selection_execution(self):
-		pass
+		p = [self.global_energy_level['1']]
+		n = len(self.global_energy_level)
+		k = len(self.global_num_tasks)
+		M = [[0 for i in range(k)] for j in range(n)]
+		D = [[0 for i in range(k)] for j in range(n)]
+		energy_sum = []
+		partition_plan = []
+
+		for i in range(1, n):
+			p[i] = p[i-1] + self.global_energy_level[str(i+1)]
+		
+		for i in range(n):
+			M[i][1] = p[i]
+
+		for i in range(k):
+			M[1][j] = self.global_energy_level[str(i+1)]
+
+		for i in range(1, n):
+			for j in range(1, k):
+				M[i][j] = sys.maxint
+				for x in range(i):
+					s = max(M[x][j-1], p[i]-p[x])
+					if M[i][j] > s:
+						M[i][j] = s
+						D[i][j] = x
 			
 	def check_recv_all_energy(self, recv_data):
 		try:
@@ -170,23 +196,19 @@ class Strategy_SRSS(Strategy):
 		send_data = self.get_basic_status()
 		send_data['energy'] = self.local_energy_level
 		self.message_communication(send_data, condition_func=self.check_recv_all_energy, timeout=10)
-		# the results are stored in 'self.global_energy_level'
-		# TODO: 
-		# 	generate the queue based on energy and put it into 'self.local_queue'
 		if self.local_negotiation == 1:
 			self.local_queue = i[0] for i in sorted(self.global_energy_level.item(), key=lambda x:x[1])
 		elif self.local_negotiation == 2:
 			self.local_queue = sorted(self.global_energy_level.iteritems(), key=lambda x:(x[1], x[0]), reverse = True)
-		self.global_energy_level = {}
+		# TODO: 
+		# 	clear energy_level at the appropriate moment
+		# self.global_energy_level = {}
 
 	# Step2: Exchange priority queue
 	def selection_step2(self):
 		send_data = self.get_basic_status()
 		send_data['queue'] = self.local_queue
 		self.message_communication(send_data, condition_func=self.check_recv_all_queue, timeout=10)
-		# the results are stored in 'self.global_negotiation_queue'
-		# TODO: 
-		# 	compare the queue and put it into 'self.local_negotiation_result'
 		for key in self.global_negotiation_queue.keys():
 			if self.local_queue == self.global_negotiation_queue[key]:
 				self.local_negotiation_result = True
@@ -200,9 +222,6 @@ class Strategy_SRSS(Strategy):
 		send_data = self.get_basic_status()
 		send_data['end'] = self.local_negotiation_result
 		self.message_communication(send_data, condition_func=self.check_recv_all_agreement, timeout=10)
-		# the results are stored in 'self.global_agreement'
-		# TODO: 
-		# 	Check if all the agreement results are 'True', set is_agreement = True / False
 		is_agreement = True
 		for value in self.global_agreement.values():
 			if value == False:
