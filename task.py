@@ -79,9 +79,9 @@ class NetworkInterface:
             str, addr = self.socketUdp.recvfrom(1000)
             self.bufferList.append((str, addr))
             return (str, addr)
-        except:
+        except Exception as e:
             print('Receive Data Failed!')
-            return None
+            raise e
 
     def retrieveData(self):
         if len(self.bufferList) > 0:
@@ -105,5 +105,6 @@ class NetworkInterface:
     def sendStringData(self, str):
         try:
             self.socketUdp.sendto(pickle.dumps(str), (self.broadcastAddr, self.udpPort))
-        except:
+        except Exception as e:
             print('Send Data Failed!')
+            raise e
