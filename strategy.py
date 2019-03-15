@@ -13,13 +13,14 @@ import socket
 class Strategy_SRSS(Strategy):
 	network = None
 	controlNet = None
+	send_data_history = None
 
 	local_id = 0
 	local_task_id = 0
-	local_task_duration = 0
 	local_energy_level = 100
 	local_direction = [1, 0]			# Direction vector: not necessary to be normalized
 	local_coordinate = [0, 0]
+	local_task_destination = [0, 0]
 	local_step_size = 1
 	local_go_interval = 0.5
 	local_round = 0
@@ -28,15 +29,17 @@ class Strategy_SRSS(Strategy):
 	local_negotiation = 1
 	local_queue = []					# [3, 1, 2] means the priority: robot-3 > robot-1 > robot-2	
 	local_negotiation_result = False	# If all the queues are the same, set as True, otherwise, False
-	send_data_history = None
 
 	global_num_robots = 1
-	global_num_tasks = 2
+	global_num_tasks = 1
 	global_min_require_robots = 1
 	global_group_num_robots = 1
 	global_energy_level = {}			# {1: 100, 2: 99, 3: 85, ...}
 	global_negotiation_queue = {}		# {'1': [3, 1, 2], '2': [3, 2, 1], '3': [3, 1, 2], ...}
 	global_agreement = {}				# {'1': True, '2': False, '3': True, ...}
+	global_task_duration = 10
+	global_task_radius = 200
+	global_task_coordinate = [400, 400]
 
 	local_debugger = None
 
@@ -61,7 +64,11 @@ class Strategy_SRSS(Strategy):
 		self.local_debugger = COREDebuggerVirtual((controlNet, 12888))
 
 	def checkFinished(self):
-		return False
+		if math.fabs(self.local_task_destination[0] - self.local_coordinate[0]) < 5 and \
+			math.fabs(self.local_task_destination[1] - self.local_coordinate[1]) < 5:
+			return True
+		else:
+			return False
 
 	def go(self):
 		if self.local_stage == 'start':
@@ -127,11 +134,8 @@ class Strategy_SRSS(Strategy):
 
 	def selection(self):
 		self.selection_step1()
-		self.local_debugger.send_to_monitor('step1')
 		is_negotiation = self.selection_step2()
-		self.local_debugger.send_to_monitor('step2')
 		is_agreement = self.selection_step3()
-		self.local_debugger.send_to_monitor('step3')
 		if is_agreement == False:
 			while is_negotiation:
 				self.local_negotiation = self.local_negotiation + 1
@@ -142,9 +146,13 @@ class Strategy_SRSS(Strategy):
 					break
 				else:
 					continue
-		self.local_debugger.send_to_monitor('step_execution')
+		self.local_negotiation = 1
 		self.selection_execution()
-		self.local_debugger.send_to_monitor('task_id, my_group_num: (%d, %d)' % (self.local_task_id, self.global_group_num_robots))
+		# After this step, we get (self.local_task_id, self.global_group_num_robots)
+		self.local_debugger.send_to_monitor('selection: ' + str((self.local_task_id, self.global_group_num_robots)))
+		self.global_energy_level = {}
+		self.global_agreement = {}
+		# clear energy level data for future use.
 
 	def selection_execution(self):
 		n = self.global_num_robots
@@ -193,15 +201,18 @@ class Strategy_SRSS(Strategy):
 		for i in range(self.global_num_tasks - 1):
 			if myindex_in_queue > partition_plan[i]:
 				self.local_task_id = self.local_task_id + 1
-		
 
-		if self.local_task_id == 0:
-			my_group_num = partition_plan[0] + 1
-		elif self.local_task_id == self.global_num_tasks - 1:
-			my_group_num = self.global_num_robots - partition_plan[-1] - 1
+		# If only one task
+		if len(partition_plan) == 0:
+			self.global_group_num_robots = self.global_num_robots
 		else:
-			my_group_num = partition_plan[self.local_task_id] - partition_plan[self.local_task_id - 1]
-		self.global_group_num_robots = my_group_num
+			if self.local_task_id == 0:
+				my_group_num = partition_plan[0] + 1
+			elif self.local_task_id == self.global_num_tasks - 1:
+				my_group_num = self.global_num_robots - partition_plan[-1] - 1
+			else:
+				my_group_num = partition_plan[self.local_task_id] - partition_plan[self.local_task_id - 1]
+			self.global_group_num_robots = my_group_num
 			
 	def check_recv_all_energy(self, recv_data):
 		try:
@@ -251,9 +262,6 @@ class Strategy_SRSS(Strategy):
 			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[1])]
 		elif self.local_negotiation == 2:
 			self.local_queue = sorted(self.global_energy_level.iteritems(), key=lambda x:(x[1], x[0]), reverse = True)
-		# TODO: 
-		# 	clear energy_level at the appropriate moment
-		# self.global_energy_level = {}
 
 	# Step2: Exchange priority queue
 	def selection_step2(self):
@@ -281,17 +289,127 @@ class Strategy_SRSS(Strategy):
 		self.global_negotiation_queue = {}
 		return is_agreement
 
+	def check_recv_mygroup_energy(self, recv_data):
+		try:
+			recv_id = recv_data['id']
+			recv_task_id = recv_data['task_id']
+			# throw out the packet that has different task_id
+			if recv_task_id != self.local_task_id:
+				return
+			self.global_energy_level[recv_id] = recv_data['energy']
+			if len(self.global_energy_level) == self.global_group_num_robots:
+				return True
+			else:
+				return False
+		except KeyError:
+			pass
+		except Exception as e:
+			raise e
+
+	def check_recv_mygroup_queue(self, recv_data):
+		try:
+			recv_id = recv_data['id']
+			recv_task_id = recv_data['task_id']
+			# throw out the packet that has different task_id
+			if recv_task_id != self.local_task_id:
+				return
+			self.global_negotiation_queue[recv_id] = recv_data['queue']
+			if len(self.global_negotiation_queue) == self.global_group_num_robots:
+				return True
+			else:
+				return False
+		except KeyError:
+			pass
+		except Exception as e:
+			raise e
+
+	def check_recv_mygroup_agreement(self, recv_data):
+		try:
+			recv_id = recv_data['id']
+			recv_task_id = recv_data['task_id']
+			# throw out the packet that has different task_id
+			if recv_task_id != self.local_task_id:
+				return
+			self.local_debugger.send_to_monitor('recv (id, task_id): ' + str((recv_id, recv_task_id)))
+			self.global_agreement[recv_id] = recv_data['end']
+			if len(self.global_agreement) == self.global_group_num_robots:
+				return True
+			else:
+				return False
+		except KeyError:
+			pass
+		except Exception as e:
+			raise e
+
 	def formation(self):
-		pass
+		self.formation_step1()
+		is_negotiation = self.formation_step2()
+		is_agreement = self.formation_step3()
+		if is_agreement == False:
+			while is_negotiation:
+				self.local_negotiation = self.local_negotiation + 1
+				self.formation_step1()
+				is_negotiation = self.formation_step2()
+				is_agreement = self.formation_step3()
+				if is_agreement == True:
+					break
+				else:
+					continue
+		self.local_negotiation = 1
+		self.formation_execution()
+		# After this step, we get (self.local_task_id, self.global_group_num_robots)
+		self.global_energy_level = {}
+		# clear energy level data for future use.
+		self.global_agreement = {}
+
+	def formation_execution(self):
+		myindex_in_queue = 0
+		for i in range(self.global_num_robots):
+			if self.local_id == self.local_queue[i]:
+				myindex_in_queue = i
+				break
+		theta = (2 * math.pi) / self.global_group_num_robots * myindex_in_queue
+		self.local_task_destination[0] = self.global_task_coordinate[0] + self.global_task_radius * math.cos(theta)
+		self.local_task_destination[1] = self.global_task_coordinate[1] + self.global_task_radius * math.sin(theta)
+		self.local_direction[0] = self.local_task_destination[0] - self.local_coordinate[0]
+		self.local_direction[1] = self.local_task_destination[1] - self.local_coordinate[1]
+		self.local_debugger.send_to_monitor('destination: ' + str(self.local_task_destination))
 
 	def formation_step1(self):
-		pass
+		send_data = self.get_basic_status()
+		send_data['energy'] = self.local_energy_level
+		send_data['task_id'] = self.local_task_id
+		self.message_communication(send_data, condition_func=self.check_recv_mygroup_energy, time_out=3)
+		if self.local_negotiation == 1:
+			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[1])]
+		elif self.local_negotiation == 2:
+			self.local_queue = sorted(self.global_energy_level.iteritems(), key=lambda x:(x[1], x[0]), reverse = True)
 
 	def formation_step2(self):
-		pass
+		send_data = self.get_basic_status()
+		send_data['queue'] = self.local_queue
+		send_data['task_id'] = self.local_task_id
+		self.message_communication(send_data, condition_func=self.check_recv_mygroup_queue, time_out=3)
+		for key in self.global_negotiation_queue.keys():
+			if self.local_queue == self.global_negotiation_queue[key]:
+				self.local_negotiation_result = True
+			else:
+				self.local_negotiation_result = False
+		self.global_negotiation_queue = {}
+		return self.local_negotiation_result
 
 	def formation_step3(self):
-		pass
+		send_data = self.get_basic_status()
+		send_data['end'] = self.local_negotiation_result
+		send_data['task_id'] = self.local_task_id
+		self.message_communication(send_data, condition_func=self.check_recv_mygroup_agreement, time_out=3)
+		is_agreement = True
+		for value in self.global_agreement.values():
+			if value == False:
+				is_agreement = False
+				break
+		self.global_negotiation_queue = {}
+		return is_agreement
 
 	def routing(self):
 		pass
@@ -314,7 +432,7 @@ class Strategy_SRSS(Strategy):
 																		self.local_id, \
 																		str(int(self.local_coordinate[0])), \
 																		str(int(self.local_coordinate[1])))
-			# self.local_debugger.send_to_monitor(core_cmd)
+			self.local_debugger.send_to_monitor('coordinate: '+ str((int(self.local_coordinate[0]), int(self.local_coordinate[1]))))
 			os.system(core_cmd)
 		else:
 			# If direction vector is 0-vector, keep in place
@@ -323,13 +441,13 @@ class Strategy_SRSS(Strategy):
 
 if __name__ == '__main__':
 	index = socket.gethostname()[1:]
-	coordinate = [[50,50*i] for i in range(1,21,1)]
+	coordinate = [[50,50*i] for i in range(1,11,1)]
 	strategy_SRSS = Strategy_SRSS(id=int(index), \
 								coordinate=coordinate[int(index)-1], \
 								direction=[1, 3], \
 								step_size=10, \
-								go_interval=0.5, \
-								num_robots=20, \
+								go_interval=0.2, \
+								num_robots=10, \
 								controlNet='172.16.0.254')
 	while not strategy_SRSS.checkFinished():
 		strategy_SRSS.go()
