@@ -538,7 +538,7 @@ class Strategy_SRSS(Strategy):
 	def routing_step3(self):
 		pass
 
-#input: current detecting range points, figure points and direction
+#input: sorted queue, current detecting range points, figure points and direction
 #output: next step range points, figure points and direction
 	def routing_execution(self):
 
