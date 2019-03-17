@@ -470,8 +470,11 @@ class Strategy_SRSS(Strategy):
 										  [p4[0], p4[1]]]))
 		rotation_matrix = np.array([[math.cos(direction), - math.sin(direction)], \
 									[math.sin(direction), math.cos(direction)]])
+		vertices = vertices - [[local_coordinate[0]], [local_coordinate[1]]]
 		new_vertices = np.matmul(rotation_matrix, vertices)
-		update_coordination = np.transpose(new_vertices + [[local_coordinate[0]], [local_coordinate[1]]])
+		update_coordinate = np.transpose(new_vertices + [[local_coordinate[0]], [local_coordinate[1]]])
+
+		return update_coordinate
 
 
 
