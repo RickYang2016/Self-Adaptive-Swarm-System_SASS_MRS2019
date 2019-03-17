@@ -187,13 +187,50 @@ def Selection Agreement(q):
 
 #input: the sorted priority qj
 #output: excute the plan or negotiate again
-def Formation Agreement():
+def Formation Agreement(q):
 	pass
 
 #input: the sorted priority qj
 #output: excute the plan or negotiate again
-def Routing Agreement():
+def Routing Agreement(q):
 	pass
+
+	def get_cross(p1, p2, p):
+
+			return (p2.x - p1.x) * (p.y - p1.y) -(p.x - p1.x) * (p2.y - p1.y)
+
+
+
+
+	def collision_detect(self):
+
+		p = [0]
+
+		direction = math.atan(self.local_coordinate[1]/self.local_coordinate[0])
+
+		plu_x = self.local_coordinate[0] + math.sqrt(2) * self.local_robot_radius * math.cos(direction + math.pi / 4)
+		plu_y = self.local_coordinate[1] + math.sqrt(2) * self.local_robot_radius * math.sin(direction + math.pi / 4)
+		pld_x = self.local_coordinate[0] + math.sqrt(2) * self.local_robot_radius * math.cos(direction - math.pi / 4)
+		pld_y = self.local_coordinate[1] + math.sqrt(2) * self.local_robot_radius * math.sin(direction - math.pi / 4)
+		pru_x = plu_x + self.local_step_size * math.cos(direction)
+		pru_y = plu_y + self.local_step_size * math.sin(direction)
+		prd_x = pld_x + self.local_step_size * math.cos(direction)
+		prd_y = pld_y + self.local_step_size * math.sin(direction)
+
+		for i in range(len(self.global_robots_coordinate)):
+			if get_cross(plu, pld, self.global_robots_coordinate[i]) * get_cross(pru, prd, self.global_robots_coordinate[i]) >= 0 && 
+			   get_cross(pld, pru, self.global_robots_coordinate[i]) * get_cross(prd, plu, self.global_robots_coordinate[i]) >= 0 :
+			   	p = self.global_robots_coordinate[i]
+
+	def routing_execution(self):
+		n = len(self.global_energy_level)
+
+		theta = 2 * atan(2 * self.local_robot_radius / self.local_step_size)
+
+		for i in range(len(p)):
+			if p[i]
+
+
 
 
 # ================================================================================================================
