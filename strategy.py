@@ -9,6 +9,7 @@ import os
 import math
 import sys
 import socket
+import numpy as np
 
 class Strategy_SRSS(Strategy):
 	network = None
@@ -40,6 +41,7 @@ class Strategy_SRSS(Strategy):
 	global_task_duration = 10
 	global_task_radius = 200
 	global_task_coordinate = [400, 400]
+	global_robots_coordinate = {}
 
 	local_debugger = None
 
@@ -64,11 +66,8 @@ class Strategy_SRSS(Strategy):
 		self.local_debugger = COREDebuggerVirtual((controlNet, 12888))
 
 	def checkFinished(self):
-		if math.fabs(self.local_task_destination[0] - self.local_coordinate[0]) < 5 and \
-			math.fabs(self.local_task_destination[1] - self.local_coordinate[1]) < 5:
-			return True
-		else:
-			return False
+		return (math.fabs(self.local_task_destination[0] - self.local_coordinate[0]) < 5 and \
+				math.fabs(self.local_task_destination[1] - self.local_coordinate[1]) < 5)
 
 	def go(self):
 		if self.local_stage == 'start':
@@ -82,9 +81,13 @@ class Strategy_SRSS(Strategy):
 			self.local_stage = 'routing'
 			self.routing()
 		elif self.local_stage == 'routing':
-			self.local_stage = 'end'
+			if self.checkFinished():
+				self.local_debugger.send_to_monitor('I finished my task!')
+				self.local_stage = 'end'
+			else:
+				self.routing()
 		elif self.local_stage == 'end':
-			self.walk_one_step()
+			self.broadcast_coordinate()
 			# default stage is 'end'
 			# if new tasks are released: local_stage -> 'start'
 		else:
@@ -411,11 +414,88 @@ class Strategy_SRSS(Strategy):
 		self.global_negotiation_queue = {}
 		return is_agreement
 
-	def routing(self):
-		pass
+	def check_recv_robots_coordinates(self, recv_data):
+		try:
+			recv_id = recv_data['id']
+			recv_coordinate = recv_data['coordinate']
+			# throw out the packet that has different task_id
+			self.global_robots_coordinate[recv_id] = recv_coordinate
+			if len(self.global_robots_coordinate) == self.global_group_num_robots:
+				return True
+			else:
+				return False
+		except KeyError:
+			pass
+		except Exception as e:
+			raise e
 
+	def routing(self):
+		is_collision = self.routing_step1()
+		if is_collision == True:
+			is_negotiation = self.routing_step2()
+			is_agreement = self.routing_step3()
+			if is_agreement == False:
+				while is_negotiation:
+					self.local_negotiation = self.local_negotiation + 1
+					self.routing_step1()
+					is_negotiation = self.routing_step2()
+					is_agreement = self.routing_step3()
+					if is_agreement == True:
+						break
+					else:
+						continue
+			self.local_negotiation = 1
+			self.routing_execution()
+			# After this step, we get (self.local_task_id, self.global_group_num_robots)
+			self.global_energy_level = {}
+			# clear energy level data for future use.
+			self.global_agreement = {}
+		else:
+			self.walk_one_step()
+
+	def get_cross(p1, p2, p):
+		return (p2[0] - p1[0]) * (p[1] - p1[1]) -(p[0] - p1[0]) * (p2[1] - p1[1])
+
+	# Step1: Collision Detection
 	def routing_step1(self):
-		pass
+		if self.local_direction[0] != 0:
+			direction_angle = math.atan(self.local_direction[1] / self.local_direction[0])
+		else:
+			direction_angle = 0
+
+		# Computing four vertices of the collision area: Rotation + Transformation
+		vertices = np.transpose(np.array([[-self.local_robot_radius, self.local_robot_radius], \
+										  [-self.local_robot_radius, -self.local_robot_radius], \
+										  [self.local_robot_radius + self.local_step_size, self.local_robot_radius], \
+										  [self.local_robot_radius + self.local_step_size, -self.local_robot_radius]]))
+		rotation_matrix = np.array([[math.cos(direction_angle), -math.sin(direction_angle)], \
+									[math.sin(direction_angle), math.cos(direction_angle)]])
+		new_vertices = np.matmul(rotation_matrix, vertices)
+		collision_vertices = np.transpose(new_vertices + [[self.local_coordinate[0]], [self.local_coordinate[1]]])
+
+		# plu_x = self.local_coordinate[0] + math.sqrt(2) * self.local_robot_radius * math.cos(direction_angle + math.pi / 4)
+		# plu_y = self.local_coordinate[1] + math.sqrt(2) * self.local_robot_radius * math.sin(direction_angle + math.pi / 4)
+		# pld_x = self.local_coordinate[0] + math.sqrt(2) * self.local_robot_radius * math.cos(direction_angle - math.pi / 4)
+		# pld_y = self.local_coordinate[1] + math.sqrt(2) * self.local_robot_radius * math.sin(direction_angle - math.pi / 4)
+		# pru_x = plu_x + self.local_step_size * math.cos(direction_angle)
+		# pru_y = plu_y + self.local_step_size * math.sin(direction_angle)
+		# prd_x = pld_x + self.local_step_size * math.cos(direction_angle)
+		# prd_y = pld_y + self.local_step_size * math.sin(direction_angle)
+
+		for index in range(self.global_num_robots):
+			i = index + 1
+			if (get_cross(collision_vertices[0], collision_vertices[1], self.global_robots_coordinate[i][0]) * \
+				get_cross(collision_vertices[2], collision_vertices[3], self.global_robots_coordinate[i][0]) >= 0 \
+				and
+				get_cross(collision_vertices[1], collision_vertices[2], self.global_robots_coordinate[i][0]) * \
+				get_cross(collision_vertices[3], collision_vertices[0], self.global_robots_coordinate[i][0]) >= 0) \
+				or 
+				(get_cross(collision_vertices[0], collision_vertices[1], self.global_robots_coordinate[i][1]) * \
+				get_cross(collision_vertices[2], collision_vertices[3], self.global_robots_coordinate[i][1]) >= 0 \
+				and
+				get_cross(collision_vertices[1], collision_vertices[2], self.global_robots_coordinate[i][1]) * \
+				get_cross(collision_vertices[3], collision_vertices[0], self.global_robots_coordinate[i][1]) >= 0) :
+				self.local_queue.append(i)
 
 	def routing_step2(self):
 		pass
@@ -423,33 +503,67 @@ class Strategy_SRSS(Strategy):
 	def routing_step3(self):
 		pass
 
+	def routing_execution(self):
+		# n = len(self.global_energy_level)
+
+		for i in range(len(self.local_queue)):
+			theta = atan(2 * self.local_robot_radius / (math.sqrt(math.pow(self.local_coordinate[0] - self.local_queue[i][0], 2) 
+				+ math.pow(self.local_coordinate[1] - self.local_queue[i][1], 2)) - self.local_robot_radius * 2))
+
+			relative_direction = self.local_queue - self.local_direction
+
+			theta1 = acos(self.local_direction * relative_direction / math.sqrt(math.pow(self.local_coordinate[0], 2) + math.pow(self.local_coordinate[1], 2)) *
+				math.sqrt(math.pow(relative_direction[0], 2) + math.pow(relative_direction[1], 2)))
+ 			
+ 			update_angle = atan(self.local_direction[1]/self.local_direction[0])
+
+			if theta1 <= theta && self.local_id == i:
+				update_angle = aten(self.local_direction[1]/self.local_direction[0]) + theta - theta1
+
+	def broadcast_coordinate(self):
+		send_data = self.get_basic_status()
+		cur_next_coordinate = [[self.local_coordinate[0], self.local_coordinate[1]], \
+								[self.local_coordinate[0], self.local_coordinate[1]]]
+		send_data['coordinate'] = cur_next_coordinate
+		self.network.sendStringData(send_data)
+
 	def walk_one_step(self):
 		L2norm = math.sqrt(self.local_direction[0] * self.local_direction[0] + self.local_direction[1] * self.local_direction[1])
 		if L2norm != 0:
 			self.local_coordinate[0] = self.local_coordinate[0] + self.local_step_size * self.local_direction[0] / L2norm
 			self.local_coordinate[1] = self.local_coordinate[1] + self.local_step_size * self.local_direction[1] / L2norm
 			core_cmd = "coresendmsg -a %s node number=%s xpos=%s ypos=%s" % (self.controlNet, \
-																		self.local_id, \
-																		str(int(self.local_coordinate[0])), \
-																		str(int(self.local_coordinate[1])))
-			self.local_debugger.send_to_monitor('coordinate: '+ str((int(self.local_coordinate[0]), int(self.local_coordinate[1]))))
+																			self.local_id, \
+																			str(int(self.local_coordinate[0])), \
+																			str(int(self.local_coordinate[1])))
+			# self.local_debugger.send_to_monitor('coordinate: '+ str((int(self.local_coordinate[0]), int(self.local_coordinate[1]))))
 			os.system(core_cmd)
+			cur_next_coordinate = [[self.local_coordinate[0], self.local_coordinate[1]], \
+									[self.local_coordinate[0] + self.local_step_size * self.local_direction[0] / L2norm, \
+									 self.local_coordinate[1] + self.local_step_size * self.local_direction[1] / L2norm]]
 		else:
 			# If direction vector is 0-vector, keep in place
+			cur_next_coordinate = [[self.local_coordinate[0], self.local_coordinate[1]], \
+									[self.local_coordinate[0], self.local_coordinate[1]]]
 			pass
-		
+		# Whatever it arrives at the destination, always broadcast coordination to other robots
+		send_data = self.get_basic_status()
+		send_data['coordinate'] = cur_next_coordinate
+		# !! Is here the proper time to clear the global robots' coordinate?
+		self.global_robots_coordinate = {}
+		self.message_communication(send_data, condition_func=self.check_recv_robots_coordinates, time_out=1)
 
 if __name__ == '__main__':
 	index = socket.gethostname()[1:]
-	coordinate = [[50,50*i] for i in range(1,11,1)]
+	coordinate = [[50,50*i] for i in range(1,21,1)]
 	strategy_SRSS = Strategy_SRSS(id=int(index), \
 								coordinate=coordinate[int(index)-1], \
 								direction=[1, 3], \
 								step_size=10, \
 								go_interval=0.2, \
-								num_robots=10, \
+								num_robots=20, \
 								controlNet='172.16.0.254')
-	while not strategy_SRSS.checkFinished():
+	while True:
 		strategy_SRSS.go()
 
 
