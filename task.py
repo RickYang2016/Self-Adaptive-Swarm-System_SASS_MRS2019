@@ -91,6 +91,13 @@ class NetworkInterface:
         else:
             return None
 
+    def examineLatestData(self):
+        if len(self.bufferList) > 0:
+            recvData = self.bufferList[0]
+            return pickle.loads(recvData)
+        else:
+            return None
+
     def receiveDataThread(self):
         #while not self.contextMouse.isEndNetwork:
         while True:

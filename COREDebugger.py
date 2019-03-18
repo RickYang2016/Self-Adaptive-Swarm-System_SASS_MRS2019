@@ -159,8 +159,8 @@ class COREDebuggerVirtual():
         self.logger = Logger(local_enable=is_local_log, path=path, filename=filename)
         self.logger.enable_remote(monitor_addr)
 
-    def send_to_monitor(self, log_str, tag='default', append_time=False):
-        self.logger.log_remote(log_str, tag=tag, append_time=append_time)
+    def send_to_monitor(self, log_str, tag='default', append_time=True):
+        self.logger.log_local_and_remote(log_str, tag=tag, append_time=append_time)
 
     def log_local(self, log_str):
         self.logger.log_local(log_str)
@@ -178,9 +178,7 @@ class COREDebuggerMonitor():
     sock_monitor = None
     is_sock_ready = False
     stop_sign = False # for controlling the socket threads
-    data_ready = False
-    recv_buffer = None
-    recvfrom_addr = None
+    bufferList = []
     recv_thread = None
     white_list_enabled = False
     black_list_enabled = False
@@ -211,9 +209,9 @@ class COREDebuggerMonitor():
             try:
                 if self.stop_sign == True:
                     break
-                self.recv_buffer, self.recvfrom_addr = self.sock_remote.recvfrom(1024)
+                recv_buffer, recvfrom_addr = self.sock_remote.recvfrom(1024)
+                self.bufferList.append((recv_buffer, recvfrom_addr))
                 # print("Received a package from %s and len = %d." %(str(recvfrom_addr), len(recv_buffer)))
-                self.data_ready = True
             except NameError:
                 self.error_print('The sock is broken when recv.')
                 break
@@ -235,32 +233,41 @@ class COREDebuggerMonitor():
         print('CORE Debugger Monitoring ended!')
         sys.exit(0)
 
+    def retrieveData(self):
+        if len(self.bufferList) > 0:
+            recvData = self.bufferList[0]
+            self.bufferList = self.bufferList[1:]
+            return recvData
+        else:
+            return None
+
     def start_monitoring(self):
         print('Start Monitoring...')
         while True:
-            if self.data_ready == True:
+            recv_data = self.retrieveData()
+            # recv_data = (json({'id':1, 'tag': 'STATUS', ...}), ('172.16.0.1', 12777))
+            if recv_data != None:
                 try:
-                    recv_dict = json.loads(self.recv_buffer.decode('utf-8'))
+                    recv_dict = json.loads(recv_data[0].decode('utf-8'))
+                    recv_addr = recv_data[1]
                     if self.white_list_enabled == True:
                         if self.white_list['tag'] == 'tag' and (recv_dict['tag'] in self.white_list['white_list']) or \
-                        (self.white_list['tag'] == 'ip' and (self.recvfrom_addr[0] in self.white_list['white_list'])):
-                            print('%s[%s][%s]%s' % (recv_dict['time'], self.recvfrom_addr[0], recv_dict['tag'], recv_dict['data']))
+                        (self.white_list['tag'] == 'ip' and (recv_addr[0] in self.white_list['white_list'])):
+                            print('%s[%s][%s]%s' % (recv_dict['time'], recv_addr[0], recv_dict['tag'], recv_dict['data']))
                         else:
                             pass # filter out
                     elif self.black_list_enabled == True:
                         if self.black_list['tag'] == 'tag' and (recv_dict['tag'] in self.black_list['black_list']):
                             continue # filter out
-                        elif self.black_list['tag'] == 'ip' and (self.recvfrom_addr[0] in self.black_list['black_list']):
+                        elif self.black_list['tag'] == 'ip' and (recv_addr[0] in self.black_list['black_list']):
                             continue # filter out
                         else:
-                            print('%s[%s][%s]%s' % (recv_dict['time'], self.recvfrom_addr[0], recv_dict['tag'], recv_dict['data']))
+                            print('%s[%s][%s]%s' % (recv_dict['time'], recv_addr[0], recv_dict['tag'], recv_dict['data']))
                     else:
-                        print('%s[%s][%s]%s' % (recv_dict['time'], self.recvfrom_addr[0], recv_dict['tag'], recv_dict['data']))
+                        print('%s[%s][%s]%s' % (recv_dict['time'], recv_addr[0], recv_dict['tag'], recv_dict['data']))
                 except Exception as e:
                     raise e
                     self.error_print("Error when received message: %s." % str(e))
-                finally:
-                    self.data_ready = False
 
     def set_black_list(self, tag, black_list):
         if self.white_list_enabled != True:
