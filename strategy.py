@@ -33,7 +33,7 @@ class Strategy_SRSS(Strategy):
 	local_negotiation = 1
 	local_queue = []					# [3, 1, 2] means the priority: robot-3 > robot-1 > robot-2	
 	local_negotiation_result = False	# If all the queues are the same, set as True, otherwise, False
-	local_collision_queue = {}			# Only contains local collision queue
+	local_collision_queue = []			# Only contains local collision queue
 
 	global_num_robots = 1
 	global_num_tasks = 1
@@ -48,6 +48,7 @@ class Strategy_SRSS(Strategy):
 	global_robots_coordinate = {}		# {1: [xx, yy], ...}
 	global_robots_polygon = {}			# {1: [(x1, y1), (x2, y2), (x3, y3), (x4, y4)], ...}
 	global_collision_queue = {}			# {1: [3, 1], 2: [], 3: [3, 4], ...}
+	global_robots_task_id = {}			# {1: 2, 2:1, 3:1, ...} Only used in routing - first priority
 
 	local_debugger = None
 
@@ -72,8 +73,8 @@ class Strategy_SRSS(Strategy):
 		self.local_debugger = COREDebuggerVirtual((controlNet, 12888))
 
 	def checkFinished(self):
-		return (math.fabs(self.local_task_destination[0] - self.local_coordinate[0]) < 5 and \
-				math.fabs(self.local_task_destination[1] - self.local_coordinate[1]) < 5)
+		return (math.fabs(self.local_task_destination[0] - self.local_coordinate[0]) < self.local_step_size / 2 and \
+				math.fabs(self.local_task_destination[1] - self.local_coordinate[1]) < self.local_step_size / 2)
 
 	def go(self):
 		if self.local_stage == 'start':
@@ -96,6 +97,7 @@ class Strategy_SRSS(Strategy):
 		elif self.local_stage == 'end':
 			self.broadcast_coordinate()
 			self.broadcast_polygon()
+			self.routing()
 			# default stage is 'end'
 			# if new tasks are released: local_stage -> 'start'
 		else:
@@ -268,7 +270,7 @@ class Strategy_SRSS(Strategy):
 	def selection_step1(self):
 		send_data = self.get_basic_status()
 		send_data['energy'] = self.local_energy_level
-		self.message_communication(send_data, condition_func=self.check_recv_all_energy, time_out=3)
+		self.message_communication(send_data, condition_func=self.check_recv_all_energy, time_out=1)
 		if self.local_negotiation == 1:
 			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[1])]
 		elif self.local_negotiation == 2:
@@ -278,7 +280,7 @@ class Strategy_SRSS(Strategy):
 	def selection_step2(self):
 		send_data = self.get_basic_status()
 		send_data['queue'] = self.local_queue
-		self.message_communication(send_data, condition_func=self.check_recv_all_queue, time_out=3)
+		self.message_communication(send_data, condition_func=self.check_recv_all_queue, time_out=1)
 		for key in self.global_negotiation_queue.keys():
 			if self.local_queue == self.global_negotiation_queue[key]:
 				self.local_negotiation_result = True
@@ -291,13 +293,13 @@ class Strategy_SRSS(Strategy):
 	def selection_step3(self):
 		send_data = self.get_basic_status()
 		send_data['end'] = self.local_negotiation_result
-		self.message_communication(send_data, condition_func=self.check_recv_all_agreement, time_out=3)
+		self.message_communication(send_data, condition_func=self.check_recv_all_agreement, time_out=1)
 		is_agreement = True
 		for value in self.global_agreement.values():
 			if value == False:
 				is_agreement = False
 				break
-		self.global_negotiation_queue = {}
+		self.global_agreement = {}
 		return is_agreement
 
 	def check_recv_mygroup_energy(self, recv_data):
@@ -390,7 +392,7 @@ class Strategy_SRSS(Strategy):
 		send_data = self.get_basic_status()
 		send_data['energy'] = self.local_energy_level
 		send_data['task_id'] = self.local_task_id
-		self.message_communication(send_data, condition_func=self.check_recv_mygroup_energy, time_out=3)
+		self.message_communication(send_data, condition_func=self.check_recv_mygroup_energy, time_out=1)
 		if self.local_negotiation == 1:
 			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[1])]
 		elif self.local_negotiation == 2:
@@ -400,7 +402,7 @@ class Strategy_SRSS(Strategy):
 		send_data = self.get_basic_status()
 		send_data['queue'] = self.local_queue
 		send_data['task_id'] = self.local_task_id
-		self.message_communication(send_data, condition_func=self.check_recv_mygroup_queue, time_out=3)
+		self.message_communication(send_data, condition_func=self.check_recv_mygroup_queue, time_out=1)
 		for key in self.global_negotiation_queue.keys():
 			if self.local_queue == self.global_negotiation_queue[key]:
 				self.local_negotiation_result = True
@@ -413,13 +415,13 @@ class Strategy_SRSS(Strategy):
 		send_data = self.get_basic_status()
 		send_data['end'] = self.local_negotiation_result
 		send_data['task_id'] = self.local_task_id
-		self.message_communication(send_data, condition_func=self.check_recv_mygroup_agreement, time_out=3)
+		self.message_communication(send_data, condition_func=self.check_recv_mygroup_agreement, time_out=1)
 		is_agreement = True
 		for value in self.global_agreement.values():
 			if value == False:
 				is_agreement = False
 				break
-		self.global_negotiation_queue = {}
+		self.global_agreement = {}
 		return is_agreement
 
 	def check_recv_robots_coordinates(self, recv_data):
@@ -472,8 +474,34 @@ class Strategy_SRSS(Strategy):
 			recv_id = recv_data['id']
 			recv_task_id = recv_data['task_id']
 			# throw out the packet that has different task_id
-			self.global_collision_queue[recv_id] = recv_collision
-			if len(self.global_collision_queue) == self.global_num_robots:
+			self.global_robots_task_id[recv_id] = recv_task_id
+			if len(self.global_robots_task_id) == len(self.local_collision_queue):
+				return True
+			else:
+				return False
+		except KeyError:
+			pass
+		except Exception as e:
+			raise e
+
+	def check_recv_local_collision_queue(self, recv_data):
+		try:
+			recv_id = recv_data['id']
+			self.global_negotiation_queue[recv_id] = recv_data['queue']
+			if len(self.global_negotiation_queue) == len(self.local_collision_queue):
+				return True
+			else:
+				return False
+		except KeyError:
+			pass
+		except Exception as e:
+			raise e
+
+	def check_recv_local_collision_agreement(self, recv_data):
+		try:
+			recv_id = recv_data['id']
+			self.global_agreement[recv_id] = recv_data['end']
+			if len(self.global_agreement) == len(self.local_collision_queue):
 				return True
 			else:
 				return False
@@ -483,32 +511,27 @@ class Strategy_SRSS(Strategy):
 			raise e
 
 	def routing(self):
-		is_collision = self.routing_step1()
+		self.routing_step1()
+		is_collision = self.routing_step2()		# Generate a local collision queue with in-group consensus
 		if is_collision == True:
-			self.local_debugger.send_to_monitor('Find Collision: ' + str(self.local_queue))
-			is_negotiation = self.routing_step2()
-			# is_agreement = self.routing_step3()
-			# if is_agreement == False:
-			# 	while is_negotiation:
-			# 		self.local_negotiation = self.local_negotiation + 1
-			# 		self.routing_step1()
-			# 		is_negotiation = self.routing_step2()
-			# 		is_agreement = self.routing_step3()
-			# 		if is_agreement == True:
-			# 			break
-			# 		else:
-			# 			continue
-			# self.local_negotiation = 1
-			# self.routing_execution()
-			# # After this step, we get (self.local_task_id, self.global_group_num_robots)
-			# self.global_energy_level = {}
-			# # clear energy level data for future use.
-			# self.global_agreement = {}
-		else:
+			self.routing_step3()				# Generate a priority queue
+			is_negotiation = self.routing_step4()
+			is_agreement = self.routing_step5()
+			if is_agreement == False:
+				while is_negotiation:
+					self.local_negotiation = self.local_negotiation + 1
+					self.routing_step3()
+					is_negotiation = self.routing_step4()
+					is_agreement = self.routing_step5()
+					if is_agreement == True:
+						break
+					else:
+						continue
+			self.local_negotiation = 1
+			self.routing_execution()
 			self.global_collision_queue = {}
-			send_data = self.get_basic_status()
-			send_data['collision_queue'] = []
-			self.message_communication(send_data, condition_func=self.check_recv_collision_queue, time_out=3)
+			self.global_agreement = {}
+		else:
 			self.walk_one_step()
 
 	def get_cross(self, p1, p2, p):
@@ -558,11 +581,9 @@ class Strategy_SRSS(Strategy):
 					self.local_queue.append(i)
 		if len(self.local_queue) > 0:
 			self.local_queue.append(self.local_id)
-			return True
-		else:
-			return False
 		# After this step, only get the "potential" collision queue
 
+	# Generate local collision queue: unique 'set' but is not unique 'queue'
 	def routing_step2(self):
 		send_data = self.get_basic_status()
 		send_data['collision_queue'] = self.local_queue
@@ -571,38 +592,83 @@ class Strategy_SRSS(Strategy):
 		u = unionfind(self.global_collision_queue.values())
 		u.createtree()
 		collision_queues = u.printree()
+		self.local_collision_queue = []
 		for queue in collision_queues:
 			if self.local_id in queue:
 				self.local_collision_queue = queue
-				self.local_debugger.send_to_monitor('Collision queue: ' + str(self.local_collision_queue))
+				break
 		# After this step, get the final local consensus collision queue
+		if len(self.local_collision_queue) > 0:
+			return True
+		else:
+			return False
 
+	# Communicate task id as the first priority
 	def routing_step3(self):
 		send_data = self.get_basic_status()
 		send_data['task_id'] = self.local_task_id
+		self.global_robots_task_id = {}
 		# TODO: check_recv_local_collision_task_id not exists
 		self.message_communication(send_data, condition_func=self.check_recv_local_collision_task_id, time_out=1)
 		if self.local_negotiation == 1:
-			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[1])]
+			self.local_queue = [i[0] for i in sorted(self.global_robots_task_id.items(), key=lambda x:x[1])]
 		elif self.local_negotiation == 2:
-			self.local_queue = sorted(self.global_energy_level.iteritems(), key=lambda x:(x[1], x[0]), reverse = True)
+			self.local_queue = sorted(self.global_robots_task_id.iteritems(), key=lambda x:(x[1], x[0]), reverse = True)
+
+	# Exchange Priority queue: Exactly same as selection part - step2
+	def routing_step4(self):
+		send_data = self.get_basic_status()
+		send_data['queue'] = self.local_queue
+		self.message_communication(send_data, condition_func=self.check_recv_local_collision_queue, time_out=1)
+		for key in self.global_negotiation_queue.keys():
+			if self.local_queue == self.global_negotiation_queue[key]:
+				self.local_negotiation_result = True
+			else:
+				self.local_negotiation_result = False
+		self.global_negotiation_queue = {}
+		return self.local_negotiation_result
+
+	# Agreement: Also the same as selection - step3
+	def routing_step5(self):
+		send_data = self.get_basic_status()
+		send_data['end'] = self.local_negotiation_result
+		self.message_communication(send_data, condition_func=self.check_recv_local_collision_agreement, time_out=1)
+		is_agreement = True
+		for value in self.global_agreement.values():
+			if value == False:
+				is_agreement = False
+				break
+		self.global_agreement = {}
+		return is_agreement
 
 	def routing_execution(self):
-		# n = len(self.global_energy_level)
-		pass
-		# for i in range(len(self.local_queue)):
-		# 	theta = atan(2 * self.local_robot_radius / (math.sqrt(math.pow(self.local_coordinate[0] - self.local_queue[i][0], 2) 
-		# 		+ math.pow(self.local_coordinate[1] - self.local_queue[i][1], 2)) - self.local_robot_radius * 2))
+		if self.local_id == self.local_queue[0]:
+			# Compute which one is closest to me.
+			for i in range(1, len(self.local_queue), 1):
+				closest_robot_id = self.local_queue[i]
+				break
+			# Decide whether rotate my direction
+			closest_robot_coordinate = np.array(self.global_robots_coordinate[closest_robot_id][0])
+			my_coordinate = np.array(self.local_coordinate)
+			my_direction = np.array(self.local_direction)
 
-		# 	relative_direction = self.local_queue - self.local_direction
+			# theta = boundary tangent angle not to collide
+			theta = math.atan(2 * self.local_robot_radius / (np.linalg.norm(closest_robot_coordinate - my_coordinate) - self.local_robot_radius * 2))
 
-		# 	theta1 = acos(self.local_direction * relative_direction / math.sqrt(math.pow(self.local_coordinate[0], 2) + math.pow(self.local_coordinate[1], 2)) *
-		# 		math.sqrt(math.pow(relative_direction[0], 2) + math.pow(relative_direction[1], 2)))
- 			
- 	# 		update_angle = atan(self.local_direction[1]/self.local_direction[0])
+			# theta1 = acos(a`b/(|a||b|))
+			relative_direction = closest_robot_coordinate - my_coordinate
+			theta1 = math.acos(np.inner(my_direction, relative_direction) / (np.linalg.norm(my_direction) * np.linalg.norm(relative_direction)))
+			my_angle = math.atan(self.local_direction[1] / self.local_direction[0])
 
-		# 	if theta1 <= theta && self.local_id == i:
-		# 		update_angle = aten(self.local_direction[1]/self.local_direction[0]) + theta - theta1
+			if theta1 < theta:
+				new_angle = my_angle + theta - theta1
+			else:
+				new_angle = my_angle
+
+			self.local_direction = [math.cos(new_angle), math.sin(new_angle)]
+			self.walk_one_step()
+		else:
+			pass
 
 	def broadcast_coordinate(self):
 		# Coordinates of current and next
@@ -640,6 +706,9 @@ class Strategy_SRSS(Strategy):
 		self.message_communication(send_data, condition_func=self.check_recv_robots_polygons, time_out=1)
 
 	def walk_one_step(self):
+		if self.checkFinished():
+			return
+
 		L2norm = math.sqrt(self.local_direction[0] * self.local_direction[0] + self.local_direction[1] * self.local_direction[1])
 		if L2norm != 0 and not self.checkFinished():
 			self.local_coordinate[0] = self.local_coordinate[0] + self.local_step_size * self.local_direction[0] / L2norm
@@ -648,6 +717,9 @@ class Strategy_SRSS(Strategy):
 																			self.local_id, \
 																			str(int(self.local_coordinate[0])), \
 																			str(int(self.local_coordinate[1])))
+			# Return to the task direction even if you change direction in routing in last step
+			self.local_direction[0] = self.local_task_destination[0] - self.local_coordinate[0]
+			self.local_direction[1] = self.local_task_destination[1] - self.local_coordinate[1]
 			# self.local_debugger.send_to_monitor('coordinate: '+ str((int(self.local_coordinate[0]), int(self.local_coordinate[1]))))
 			os.system(core_cmd)
 		else:
@@ -660,7 +732,7 @@ if __name__ == '__main__':
 	strategy_SRSS = Strategy_SRSS(id=int(index), \
 								coordinate=coordinate[int(index)-1], \
 								direction=[1, 3], \
-								step_size=10, \
+								step_size=5, \
 								go_interval=0.2, \
 								num_robots=5, \
 								controlNet='172.16.0.254')
