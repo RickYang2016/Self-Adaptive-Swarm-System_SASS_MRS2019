@@ -49,6 +49,7 @@ class Strategy_SRSS(Strategy):
 	global_robots_polygon = {}			# {1: [(x1, y1), (x2, y2), (x3, y3), (x4, y4)], ...}
 	global_collision_queue = {}			# {1: [3, 1], 2: [], 3: [3, 4], ...}
 	global_robots_task_id = {}			# {1: 2, 2:1, 3:1, ...} Only used in routing - first priority
+	global_deadlock = {}
 
 	local_debugger = None
 
@@ -56,6 +57,7 @@ class Strategy_SRSS(Strategy):
 				coordinate=[50, 50], \
 				direction=[1, 1], \
 				step_size=1, \
+				robot_radius=10, \
 				go_interval=0.5, \
 				num_robots=1, \
 				controlNet='172.16.0.254'):
@@ -63,6 +65,7 @@ class Strategy_SRSS(Strategy):
 		self.local_coordinate = coordinate
 		self.local_direction = direction
 		self.local_step_size = step_size
+		self.local_robot_radius = robot_radius
 		self.local_go_interval = go_interval
 		self.global_num_robots = num_robots
 		self.controlNet = controlNet
@@ -87,6 +90,11 @@ class Strategy_SRSS(Strategy):
 		elif self.local_stage == 'formation':
 			self.local_stage = 'routing'
 		elif self.local_stage == 'routing':
+			core_cmd = "coresendmsg -a %s node number=%s xpos=%s ypos=%s" % (self.controlNet, \
+																			self.local_id, \
+																			str(int(self.local_coordinate[0])), \
+																			str(int(self.local_coordinate[1])))
+			os.system(core_cmd)
 			if self.checkFinished():
 				self.local_debugger.send_to_monitor('I finished my task!')
 				self.local_stage = 'end'
@@ -510,6 +518,19 @@ class Strategy_SRSS(Strategy):
 		except Exception as e:
 			raise e
 
+	def check_recv_deadlock(self, recv_data):
+		try:
+			recv_id = recv_data['id']
+			self.global_deadlock[recv_id] = recv_data['deadlock']
+			if len(self.global_deadlock) == len(self.local_collision_queue):
+				return True
+			else:
+				return False
+		except KeyError:
+			pass
+		except Exception as e:
+			raise e
+
 	def routing(self):
 		self.routing_step1()
 		is_collision = self.routing_step2()		# Generate a local collision queue with in-group consensus
@@ -642,33 +663,55 @@ class Strategy_SRSS(Strategy):
 		return is_agreement
 
 	def routing_execution(self):
-		if self.local_id == self.local_queue[0]:
-			# Compute which one is closest to me.
-			for i in range(1, len(self.local_queue), 1):
-				closest_robot_id = self.local_queue[i]
-				break
-			# Decide whether rotate my direction
-			closest_robot_coordinate = np.array(self.global_robots_coordinate[closest_robot_id][0])
-			my_coordinate = np.array(self.local_coordinate)
-			my_direction = np.array(self.local_direction)
+		# Loop until deadlock dismisses
+		while True:
+			self.global_deadlock = {}
+			if self.local_id == self.local_queue[0]:
+				# Compute which one is closest to me.
+				for i in range(1, len(self.local_queue), 1):
+					closest_robot_id = self.local_queue[i]
+					break
 
-			# theta = boundary tangent angle not to collide
-			theta = math.atan(2 * self.local_robot_radius / (np.linalg.norm(closest_robot_coordinate - my_coordinate) - self.local_robot_radius * 2))
+				is_deadlock = False
+				send_data = self.get_basic_status()
+				send_data['deadlock'] = is_deadlock
+				self.message_communication(send_data, condition_func=self.check_recv_deadlock, time_out=1)
 
-			# theta1 = acos(a`b/(|a||b|))
-			relative_direction = closest_robot_coordinate - my_coordinate
-			theta1 = math.acos(np.inner(my_direction, relative_direction) / (np.linalg.norm(my_direction) * np.linalg.norm(relative_direction)))
-			my_angle = math.atan(self.local_direction[1] / self.local_direction[0])
+				if is_deadlock == False:
+					# Decide whether rotate my direction
+					closest_robot_coordinate = np.array(self.global_robots_coordinate[closest_robot_id][0])
+					my_coordinate = np.array(self.local_coordinate)
+					my_direction = np.array(self.local_direction)
 
-			if theta1 < theta:
-				new_angle = my_angle + theta - theta1
+					# theta = boundary tangent angle not to collide
+					theta = math.atan(2 * self.local_robot_radius / (np.linalg.norm(closest_robot_coordinate - my_coordinate) - self.local_robot_radius * 2))
+
+					# theta1 = acos(a`b/(|a||b|))
+					relative_direction = closest_robot_coordinate - my_coordinate
+					theta1 = math.acos(np.inner(my_direction, relative_direction) / (np.linalg.norm(my_direction) * np.linalg.norm(relative_direction)))
+					my_angle = math.atan(self.local_direction[1] / self.local_direction[0])
+
+					if theta1 < theta:
+						new_angle = my_angle + theta - theta1
+					else:
+						new_angle = my_angle
+
+					self.local_direction = [math.cos(new_angle), math.sin(new_angle)]
+					self.walk_one_step()
+					break
+				else:
+					# shift my local_queue: put myself to the last
+					self.local_queue = self.local_queue[1:] + self.local_queue[0:1]
 			else:
-				new_angle = my_angle
-
-			self.local_direction = [math.cos(new_angle), math.sin(new_angle)]
-			self.walk_one_step()
-		else:
-			pass
+				# I am not the first one in queue
+				send_data = self.get_basic_status()
+				send_data['deadlock'] = False
+				self.message_communication(send_data, condition_func=self.check_recv_deadlock, time_out=1)
+				# The first one in queue has deadlock -> shift
+				if self.global_deadlock[self.local_queue[0]] == True:
+					self.local_queue = self.local_queue[1:] + self.local_queue[0:1]
+				else:
+					break
 
 	def broadcast_coordinate(self):
 		# Coordinates of current and next
@@ -728,12 +771,16 @@ class Strategy_SRSS(Strategy):
 
 if __name__ == '__main__':
 	index = socket.gethostname()[1:]
-	coordinate = [[50,50*i] for i in range(1,6,1)]
+	# Use the current coordinate to compute
+	with open('../n%d.xy' % int(index), 'r') as f:
+		xy = f.read()
+		coordinate = [int(float(xy.split(' ')[0])), int(float(xy.split(' ')[1]))]
 	strategy_SRSS = Strategy_SRSS(id=int(index), \
-								coordinate=coordinate[int(index)-1], \
+								coordinate=coordinate, \
 								direction=[1, 3], \
-								step_size=5, \
-								go_interval=0.2, \
+								step_size=10, \
+								robot_radius=10, \
+								go_interval=0.1, \
 								num_robots=5, \
 								controlNet='172.16.0.254')
 	while True:
