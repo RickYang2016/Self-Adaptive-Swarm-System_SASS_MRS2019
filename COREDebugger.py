@@ -64,6 +64,7 @@ class Logger():
                 if append_time == True:
                     write_str = self.time_generator(type='milliseconds') + write_str
                 self.log_file.write(write_str)
+                self.log_file.flush()
             except Exception as e:
                 self.error_print('Log file appending failed.')
                 self.is_local_initialized == False
@@ -153,8 +154,9 @@ class Logger():
 
 class COREDebuggerVirtual():
     logger = None
+    is_release = False
 
-    def __init__(self, monitor_addr, is_local_log=False, path='pwd', filename=''):
+    def __init__(self, monitor_addr, is_local_log=True, path='pwd', filename=''):
         # TODO: recv and parse command -> bind some response functions to command
         self.logger = Logger(local_enable=is_local_log, path=path, filename=filename)
         self.logger.enable_remote(monitor_addr)
@@ -168,8 +170,13 @@ class COREDebuggerVirtual():
     def close_socket(self):
         self.logger.disable_remote()
 
-    def start_recv_cmd(self):
-        pass
+    def receive_cmd(self):
+        if self.is_release == False:
+            task = {'duration': 10, 'radius' : 200, 'coordinate': [500, 500], 'new_task': True}
+            self.is_release = True
+            return task
+        else:
+            return None
 
     def bind_response_func(self, cmd, func):
         pass
