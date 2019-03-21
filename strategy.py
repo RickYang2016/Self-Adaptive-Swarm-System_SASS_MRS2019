@@ -8,6 +8,7 @@ import time
 import os
 import math
 import sys
+import random
 import socket
 import numpy as np
 from shapely.geometry import Polygon
@@ -17,6 +18,7 @@ class Strategy_SRSS(Strategy):
 	network = None
 	controlNet = None
 	send_data_history = None
+	time_start = None 					# For task release simulation -> Future work: real dynamic change.
 
 	local_id = 0
 	local_task_id = 0
@@ -28,28 +30,30 @@ class Strategy_SRSS(Strategy):
 	local_step_size = 1
 	local_go_interval = 0.5
 	local_round = 0
-	local_stage = 'selection'
+	local_stage = 'start'
 	local_step = 0
 	local_negotiation = 1
+	local_has_gone = 0					# How many steps you go
 	local_queue = []					# [3, 1, 2] means the priority: robot-3 > robot-1 > robot-2	
 	local_negotiation_result = False	# If all the queues are the same, set as True, otherwise, False
 	local_collision_queue = []			# Only contains local collision queue
 
 	global_num_robots = 1 
-	global_num_tasks = 1
+	global_num_tasks = 0
 	global_min_require_robots = 1
 	global_group_num_robots = 1
 	global_energy_level = {}			# {1: 100, 2: 99, 3: 85, ...}
 	global_negotiation_queue = {}		# {'1': [3, 1, 2], '2': [3, 2, 1], '3': [3, 1, 2], ...}
 	global_agreement = {}				# {'1': True, '2': False, '3': True, ...}
-	global_task_list = [{'duration': 10, 'radius' : 150, 'coordinate': [700, 500], 'new_task': True}]				
-										# [{'duration': 100, 'raduis': 20, 'coordinate': [100, 100]}, {'duration': 150, 'raduis': 30, 'coordinate': [200, 150]}, ...]
+	global_task_list = []				# [{'duration': 100, 'raduis': 20, 'coordinate': [100, 100]}, {'duration': 150, 'raduis': 30, 'coordinate': [200, 150]}, ...]
 	global_new_task_list = []			# Same as 
+	global_robots_task_distance = {}	# Used in formation: the distance matrix - robots vs. location of the task
 	global_robots_coordinate = {}		# {1: [xx, yy], ...}
 	global_robots_polygon = {}			# {1: [(x1, y1), (x2, y2), (x3, y3), (x4, y4)], ...}
 	global_collision_queue = {}			# {1: [3, 1], 2: [], 3: [3, 4], ...}
 	global_robots_task_id = {}			# {1: 2, 2:1, 3:1, ...} Only used in routing - first priority
 	global_deadlock = {}
+	global_is_finish_task = {}			# {1: True, 4: False, 8: False} Only consider about my group
 
 	local_debugger = None
 
@@ -58,6 +62,7 @@ class Strategy_SRSS(Strategy):
 				direction=[1, 1], \
 				step_size=1, \
 				robot_radius=10, \
+				energy_level=100, \
 				go_interval=0.5, \
 				num_robots=1, \
 				controlNet='172.16.0.254'):
@@ -66,6 +71,7 @@ class Strategy_SRSS(Strategy):
 		self.local_direction = direction
 		self.local_step_size = step_size
 		self.local_robot_radius = robot_radius
+		self.local_energy_level = energy_level
 		self.local_go_interval = go_interval
 		self.global_num_robots = num_robots
 		self.controlNet = controlNet
@@ -73,73 +79,124 @@ class Strategy_SRSS(Strategy):
 		self.network.initSocket()
 		self.network.startReceiveThread()
 		# Debugger tool:
-		self.local_debugger = COREDebuggerVirtual((controlNet, 12888))
+		self.local_debugger = COREDebuggerVirtual((controlNet, 12888), path='/home/zhiwei/SRSS/log', filename=str(self.local_id))
+		self.time_start = time.time()
+		self.local_debugger.log_local('Start.', tag='Status')
 
 	def checkFinished(self):
 		return (math.fabs(self.local_task_destination[0] - self.local_coordinate[0]) < self.local_step_size / 2 and \
 				math.fabs(self.local_task_destination[1] - self.local_coordinate[1]) < self.local_step_size / 2)
 
 	def go(self):
+		self.local_debugger.log_local('%.2f' % self.local_energy_level, tag='Battery Energy')
 		if self.local_stage == 'start':
-			pass
+			# Wait until new task arrives
+			if self.global_num_tasks > 0:
+				self.local_stage = 'selection'
+			else:
+				self.local_energy_level = self.local_energy_level - 0.04
+				time.sleep(1)
 			# self.global_condition_func()
 		elif self.local_stage == 'selection':
+			self.global_is_finish_task = {}
 			self.local_round = self.local_round + 1
+			self.local_debugger.log_local('Selection Start.', tag='Status')
 			self.selection()
+			self.local_debugger.log_local('Selection End: Do Task %d.' % self.local_task_id, tag='Status')
 			self.local_stage = 'formation'
 		elif self.local_stage == 'formation':
+			self.local_debugger.log_local('Formation Start.', tag='Status')
 			self.formation()
+			# Formation End printed in formation step3
 			self.local_stage = 'routing'
 		elif self.local_stage == 'routing':
+			self.local_debugger.log_local('Routing Start.', tag='Status')
 			if self.checkFinished():
 				self.local_debugger.send_to_monitor('I finished my task!')
+				self.local_debugger.log_local('Task Finished.', tag='Status')
 				self.local_stage = 'end'
 			else:
-				self.broadcast_coordinate()	# should broadcast original coodinate and polygon before routing.
-				self.broadcast_polygon()
-				self.routing()
+				if not self.check_new_tasks():
+					self.broadcast_coordinate()	# should broadcast original coodinate and polygon before routing.
+				else:
+					self.reallocate_tasks()
+					return
+				if not self.check_new_tasks():
+					self.broadcast_polygon()
+				else:
+					self.reallocate_tasks()
+					return
+				if not self.check_new_tasks():
+					self.routing()
+				else:
+					self.reallocate_tasks()
+					return
 		elif self.local_stage == 'end':
-			self.broadcast_coordinate()
-			self.broadcast_polygon()
-			self.routing()
+			if not self.check_new_tasks():
+				self.broadcast_coordinate()
+			else:
+				self.reallocate_tasks()
+				return
+			if not self.check_new_tasks():
+				self.broadcast_polygon()
+			else:
+				self.reallocate_tasks()
+				return
+			if not self.check_new_tasks():
+				self.routing()
+			else:
+				self.reallocate_tasks()
+				return
 			# default stage is 'end'
 			# if new tasks are released: local_stage -> 'start'
 		else:
 			print('Unknown state.')
 		time.sleep(self.local_go_interval)
+		self.reallocate_tasks()
+		
+	def reallocate_tasks(self):
+		if self.local_stage != 'selection' and self.local_stage != 'formation':
+			num_tasks_now = sum([i['start'] <= time.time()-self.time_start for i in self.global_task_list])
+			if self.global_num_tasks != num_tasks_now:
+				self.global_num_tasks = num_tasks_now
+				self.local_stage = 'selection'
+				self.local_debugger.log_local('A New Task Released.', tag='Task')
+				self.local_debugger.send_to_monitor('A New Task Released.', tag='Task')
+		if self.local_id == 1:
+			core_cmd = "coresendmsg -a %s node number=%s xpos=%s ypos=%s" % (self.controlNet, \
+																			self.global_num_robots+self.global_num_tasks+1, \
+																			str(int(self.global_task_list[self.global_num_tasks-1]['coordinate'][0])), \
+																			str(int(self.global_task_list[self.global_num_tasks-1]['coordinate'][1])))
+			os.system(core_cmd)
+
+	def check_new_tasks(self):
+		if self.local_stage != 'selection' and self.local_stage != 'formation':
+			num_tasks_now = sum([i['start'] <= time.time()-self.time_start for i in self.global_task_list])
+			if self.global_num_tasks != num_tasks_now:
+				return True
+			else:
+				return False
+		else:
+			return False
+
+	def check_recv_is_finish_task(self):
+		if sum([i == True for i in self.global_is_finish_task.values()]) == self.global_group_num_robots:
+			return True
+		else:
+			return False
 
 	def global_condition_func(self, recv_data):
-		# TODO: 
-		# 	Check if there is a task released.
-		# 	Set self.local_stage -> 'start'
-		# 	If some task is executing, put it into a place to store
-		try:
-			# only check the latest package, keep it in the buffer list
-			# if new task is released
-			if recv_data['new_task']:
-				self.local_debugger.send_to_monitor('New task released.')
-				self.global_new_task_list.append({	'duration': recv_data['duration'], \
-													'radius' : recv_data['radius'], \
-													'coordinate': recv_data['coordinate']})
-			# 		if self.local_stage != 'selection' and self.local_stage != 'formation':
-			# 			# 'start', 'routing' or 'end'
-			# 			self.global_task_list = self.global_task_list + self.global_new_task_list
-			# 			self.global_new_task_list = []
-			# 			self.global_num_tasks = len(self.global_task_list)
-			# 			self.local_stage = 'selection'
-			else:
-				pass
-		except KeyError as e:
-			pass
-		except Exception as e:
-			raise e
-
+		pass
 
 	def message_communication(self, send_data, condition_func, time_out=10):
 		# input: send_data is a dictionary
 		# output: recv_data is also a dictionary
 		# new task release: trigger a new round of <selection-formation-routing>
 		while True:
+			self.local_energy_level = self.local_energy_level - 0.01
+			# This is for preventing them to stuck here if everyone finished task
+			if self.check_new_tasks():
+				return
 			time_start = time.time()
 			self.network.sendStringData(send_data)
 			# self.local_debugger.send_to_monitor('send: ' + str(send_data))
@@ -159,7 +216,6 @@ class Strategy_SRSS(Strategy):
 						continue
 				except Exception as e:
 					raise e
-			self.local_debugger.send_to_monitor('I am checking: ' + str(condition_func.__name__))
 			self.network.sendStringData(self.send_data_history)
 				
 	def get_basic_status(self):
@@ -295,7 +351,7 @@ class Strategy_SRSS(Strategy):
 	def selection_step1(self):
 		send_data = self.get_basic_status()
 		send_data['energy'] = self.local_energy_level
-		self.message_communication(send_data, condition_func=self.check_recv_all_energy, time_out=0.1)
+		self.message_communication(send_data, condition_func=self.check_recv_all_energy, time_out=0.01)
 		if self.local_negotiation == 1:
 			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[1])]
 		elif self.local_negotiation == 2:
@@ -305,7 +361,7 @@ class Strategy_SRSS(Strategy):
 	def selection_step2(self):
 		send_data = self.get_basic_status()
 		send_data['queue'] = self.local_queue
-		self.message_communication(send_data, condition_func=self.check_recv_all_queue, time_out=0.1)
+		self.message_communication(send_data, condition_func=self.check_recv_all_queue, time_out=0.01)
 		self.local_negotiation_result = False
 		for key in self.global_negotiation_queue.keys():
 			if self.local_queue == self.global_negotiation_queue[key]:
@@ -320,7 +376,7 @@ class Strategy_SRSS(Strategy):
 	def selection_step3(self):
 		send_data = self.get_basic_status()
 		send_data['end'] = self.local_negotiation_result
-		self.message_communication(send_data, condition_func=self.check_recv_all_agreement, time_out=0.1)
+		self.message_communication(send_data, condition_func=self.check_recv_all_agreement, time_out=0.01)
 		is_agreement = True
 		for value in self.global_agreement.values():
 			if value == True:
@@ -380,6 +436,23 @@ class Strategy_SRSS(Strategy):
 		except Exception as e:
 			raise e
 
+	def check_recv_mygroup_distance(self, recv_data):
+		try:
+			recv_id = recv_data['id']
+			recv_task_id = recv_data['task_id']
+			# throw out the packet that has different task_id
+			if recv_task_id != self.local_task_id:
+				return
+			self.global_robots_task_distance[recv_id] = recv_data['dist']
+			if len(self.global_robots_task_distance) == self.global_group_num_robots:
+				return True
+			else:
+				return False
+		except KeyError:
+			pass
+		except Exception as e:
+			raise e
+
 	def formation(self):
 		self.formation_step1()
 		is_negotiation = self.formation_step2()
@@ -400,13 +473,33 @@ class Strategy_SRSS(Strategy):
 		self.global_energy_level = {}
 		# clear energy level data for future use.
 		self.global_agreement = {}
+		self.global_robots_task_distance = {}
 
 	def formation_execution(self):
+		# Computing the distances to the different task locations
+		dist_vector = []
+		for i in range(self.global_group_num_robots):
+			theta = (2 * math.pi) / self.global_group_num_robots * i
+			task_coordinate = np.array(self.global_task_list[self.local_task_id]['coordinate'])
+			task_radius = self.global_task_list[self.local_task_id]['radius']
+			task_destination = task_coordinate + np.array([task_radius * math.cos(theta), task_radius * math.sin(theta)])
+			task_dist = np.linalg.norm(task_destination - np.array(self.local_coordinate))
+			dist_vector.append(task_dist)
+		# Send the distance vector to others
+		send_data = self.get_basic_status()
+		send_data['dist'] = dist_vector
+		send_data['task_id'] = self.local_task_id
+		self.message_communication(send_data, condition_func=self.check_recv_mygroup_distance, time_out=0.01)
+		dist_matrix = self.global_robots_task_distance
+		# Everyone look at the distance matrix and use the consensus queue to sequentially choose task.
 		myindex_in_queue = 0
-		for i in range(self.global_num_robots):
-			if self.local_id == self.local_queue[i]:
-				myindex_in_queue = i
+		for i in self.local_queue:
+			task_chosen = dist_matrix[i].index(min(dist_matrix[i]))
+			if i == self.local_id:
+				myindex_in_queue = task_chosen
 				break
+			for j in dist_matrix:
+				dist_matrix[j][task_chosen] = float('inf')
 		theta = (2 * math.pi) / self.global_group_num_robots * myindex_in_queue
 		my_task_coordinate = self.global_task_list[self.local_task_id]['coordinate']
 		my_task_radius = self.global_task_list[self.local_task_id]['radius']
@@ -415,12 +508,13 @@ class Strategy_SRSS(Strategy):
 		self.local_direction[0] = self.local_task_destination[0] - self.local_coordinate[0]
 		self.local_direction[1] = self.local_task_destination[1] - self.local_coordinate[1]
 		self.local_debugger.send_to_monitor('formation: index = ' + str(myindex_in_queue))
+		self.local_debugger.log_local('Formation End: To Position %d.' % myindex_in_queue, tag='Status')
 
 	def formation_step1(self):
 		send_data = self.get_basic_status()
 		send_data['energy'] = self.local_energy_level
 		send_data['task_id'] = self.local_task_id
-		self.message_communication(send_data, condition_func=self.check_recv_mygroup_energy, time_out=0.1)
+		self.message_communication(send_data, condition_func=self.check_recv_mygroup_energy, time_out=0.01)
 		if self.local_negotiation == 1:
 			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[1])]
 		elif self.local_negotiation == 2:
@@ -430,7 +524,7 @@ class Strategy_SRSS(Strategy):
 		send_data = self.get_basic_status()
 		send_data['queue'] = self.local_queue
 		send_data['task_id'] = self.local_task_id
-		self.message_communication(send_data, condition_func=self.check_recv_mygroup_queue, time_out=0.1)
+		self.message_communication(send_data, condition_func=self.check_recv_mygroup_queue, time_out=0.01)
 		self.local_negotiation_result = False
 		for key in self.global_negotiation_queue.keys():
 			if self.local_queue == self.global_negotiation_queue[key]:
@@ -445,7 +539,7 @@ class Strategy_SRSS(Strategy):
 		send_data = self.get_basic_status()
 		send_data['end'] = self.local_negotiation_result
 		send_data['task_id'] = self.local_task_id
-		self.message_communication(send_data, condition_func=self.check_recv_mygroup_agreement, time_out=0.1)
+		self.message_communication(send_data, condition_func=self.check_recv_mygroup_agreement, time_out=0.01)
 		is_agreement = True
 		for value in self.global_agreement.values():
 			if value == True:
@@ -458,10 +552,12 @@ class Strategy_SRSS(Strategy):
 		try:
 			recv_id = recv_data['id']
 			recv_coordinate = recv_data['coordinate']
+			recv_task_id = recv_data['task_id']
 			recv_is_finished = recv_data['is_finish']
 			# throw out the packet that has different task_id
 			self.global_robots_coordinate[recv_id] = recv_coordinate
-			#self.global_robots_finished[recv_id] = recv_is_finished
+			if recv_task_id == self.local_task_id:
+				self.global_is_finish_task[recv_id] = recv_data['is_finish']
 			if len(self.global_robots_coordinate) == self.global_num_robots:
 				return True
 			else:
@@ -494,7 +590,8 @@ class Strategy_SRSS(Strategy):
 			self.global_collision_queue[recv_id] = recv_collision
 			if len(self.global_collision_queue) == self.global_num_robots:
 				return True
-			else:
+			else: 
+				#self.local_debugger.send_to_monitor('collision_queue: %d %d' % (len(self.global_collision_queue), self.global_num_robots))
 				return False
 		except KeyError:
 			pass
@@ -511,6 +608,7 @@ class Strategy_SRSS(Strategy):
 			if len(self.global_robots_task_id) == len(self.local_collision_queue):
 				return True
 			else:
+				#self.local_debugger.send_to_monitor('collision_taskid: %d %d' % (len(self.global_robots_task_id), len(self.local_collision_queue)))
 				return False
 		except KeyError:
 			pass
@@ -586,16 +684,6 @@ class Strategy_SRSS(Strategy):
 		else:
 			self.walk_one_step()
 
-	def get_cross(self, p1, p2, p):
-		return (p2[0] - p1[0]) * (p[1] - p1[1]) -(p[0] - p1[0]) * (p2[1] - p1[1])
-
-	def inside_point(self, p1, p2, p3, p4, p):
-		return  (self.get_cross(p1, p2, p) * \
-				self.get_cross(p3, p4, p) >= 0) \
-				and \
-				(self.get_cross(p2, p3, p) * \
-				self.get_cross(p4, p1, p) >= 0) \
-
 	def rectangle_transform(self, rectangle, direction, local_coordinate):
 		vertices = np.transpose(np.array([[rectangle[0][0], rectangle[0][1]], \
 										  [rectangle[1][0], rectangle[1][1]], \
@@ -650,7 +738,7 @@ class Strategy_SRSS(Strategy):
 		send_data = self.get_basic_status()
 		send_data['collision_queue'] = self.local_queue
 		self.global_collision_queue = {}
-		self.message_communication(send_data, condition_func=self.check_recv_collision_queue, time_out=0.1)
+		self.message_communication(send_data, condition_func=self.check_recv_collision_queue, time_out=0.01)
 		u = unionfind(self.global_collision_queue.values())
 		u.createtree()
 		collision_queues = u.printree()
@@ -661,7 +749,6 @@ class Strategy_SRSS(Strategy):
 				break
 		# After this step, get the final local consensus collision queue
 		if len(self.local_collision_queue) > 0:
-			self.local_debugger.send_to_monitor('consensus collision queue: ' + str(self.local_collision_queue))
 			return True
 		else:
 			return False
@@ -672,17 +759,17 @@ class Strategy_SRSS(Strategy):
 		send_data['task_id'] = self.local_task_id
 		self.global_robots_task_id = {}
 		# TODO: check_recv_local_collision_task_id not exists
-		self.message_communication(send_data, condition_func=self.check_recv_local_collision_task_id, time_out=0.1)
+		self.message_communication(send_data, condition_func=self.check_recv_local_collision_task_id, time_out=0.01)
 		if self.local_negotiation == 1:
 			self.local_queue = [i[0] for i in sorted(self.global_robots_task_id.items(), key=lambda x:x[1])]
 		elif self.local_negotiation == 2:
-			self.local_queue = sorted(self.global_robots_task_id.iteritems(), key=lambda x:(x[1], x[0]), reverse = True)
+			self.local_queue = [i[0] for i in sorted(self.global_robots_task_id.items(), key=lambda x:(x[1], x[0]), reverse = True)]
 
 	# Exchange Priority queue: Exactly same as selection part - step2
 	def routing_step4(self):
 		send_data = self.get_basic_status()
 		send_data['queue'] = self.local_queue
-		self.message_communication(send_data, condition_func=self.check_recv_local_collision_queue, time_out=0.1)
+		self.message_communication(send_data, condition_func=self.check_recv_local_collision_queue, time_out=0.01)
 		self.local_negotiation_result = False
 		for key in self.global_negotiation_queue.keys():
 			if self.local_queue == self.global_negotiation_queue[key]:
@@ -697,7 +784,7 @@ class Strategy_SRSS(Strategy):
 	def routing_step5(self):
 		send_data = self.get_basic_status()
 		send_data['end'] = self.local_negotiation_result
-		self.message_communication(send_data, condition_func=self.check_recv_local_collision_agreement, time_out=0.1)
+		self.message_communication(send_data, condition_func=self.check_recv_local_collision_agreement, time_out=0.01)
 		is_agreement = True
 		for value in self.global_agreement.values():
 			if value == True:
@@ -707,20 +794,10 @@ class Strategy_SRSS(Strategy):
 		return is_agreement
 
 	def routing_execution(self):
-		self.local_debugger.send_to_monitor('Routing Execution - my queue: ' + str(self.local_queue))
 		# Loop until deadlock dismisses
 		while True:
 			self.global_deadlock = {}
 			if self.local_id == self.local_queue[0]:
-				self.local_debugger.send_to_monitor('I am the first one to go.')
-				# angle_queue = {}
-				# for robot_id in self.local_queue:
-				# 	if robot_id != self.local_id:
-				# 		relative_direction = math.atan((self.global_robots_coordinate[robot_id][0][1] - self.local_coordinate[1]) / \
-				# 										(self.global_robots_coordinate[robot_id][0][0] - self.local_coordinate[0]))
-				# 		angle_queue[robot_id] = relative_direction
-				# ordered_queue = [i[0] for i in sorted(angle_queue.items(), key=lambda x:x[1])]
-
 				dist_queue = {}
 				for robot_id in self.local_queue:
 					if robot_id != self.local_id:
@@ -749,60 +826,15 @@ class Strategy_SRSS(Strategy):
 						new_angle = my_angle
 
 					self.local_direction = [math.cos(new_angle), math.sin(new_angle)]
-					self.local_debugger.send_to_monitor('new_angle: ' + str(self.local_direction))
 					is_deadlock = False
-				elif not self.checkFinished():
-					# Add first element to construct a circle for future use
-					ordered_queue.append(ordered_queue[0])
-
-					# for i in range(len(ordered_queue) - 1):
-					# 	j = i + 1
-
-					# 	coordinate_i = self.global_robots_coordinate[ordered_queue[i]][0]
-					# 	coordinate_j = self.global_robots_coordinate[ordered_queue[j]][0]
-
-					# 	feasible_distance = np.linalg.norm(	np.array(coordinate_i) - np.array(coordinate_j))
-					# 	self.local_debugger.send_to_monitor('feasible_distance > 4r:' + str(feasible_distance >= 4 * self.local_robot_radius))
-					# 	relative_distance1 = np.linalg.norm(np.array(coordinate_i) - np.array(self.local_coordinate))
-					# 	relative_distance2 = np.linalg.norm(np.array(coordinate_j) - np.array(self.local_coordinate))
-
-					# 	vector1 = [[self.local_robot_radius, 2 * self.local_robot_radius], [relative_distance1 - self.local_robot_radius, self.local_robot_radius]]
-					# 	rotate1_direction = math.atan((coordinate_i[1] - self.local_coordinate[1]) / (coordinate_i[0] - self.local_coordinate[0]))
-
-					# 	vector2 = [[self.local_robot_radius, self.local_robot_radius], [relative_distance1 - self.local_robot_radius, -self.local_robot_radius]]
-					# 	rotate2_direction = math.atan((coordinate_j[1] - self.local_coordinate[1]) / (coordinate_j[0] - self.local_coordinate[0]))
-
-					# 	rotated_vector1 = self.vector_transform(vector1, rotate1_direction, self.local_coordinate)
-					# 	rotated_vector2 = self.vector_transform(vector2, rotate2_direction, self.local_coordinate)
-
-					# 	rotated_vector1 = [rotated_vector1[1][0] - rotated_vector1[0][0], rotated_vector1[1][1] - rotated_vector1[0][1]]
-					# 	rotated_vector2 = [rotated_vector2[1][0] - rotated_vector2[0][0], rotated_vector2[1][1] - rotated_vector2[0][1]]
-
-					# 	if feasible_distance >= 4 * self.local_robot_radius:
-					# 		if np.cross(self.local_direction, rotated_vector1) * np.cross(self.local_direction, rotated_vector2) <= 0:
-					# 			is_deadlock = False
-
-					# 		else:
-					# 			self.local_debugger.send_to_monitor('I need to go in the middle.')
-					# 			is_deadlock = False
-					# 			self.local_direction = [rotated_vector1[0] + rotated_vector2[0], 
-					# 									rotated_vector1[1] + rotated_vector2[1]]
-					# 	elif np.cross(rotated_vector1, rotated_vector2) < 0:
-					# 		self.local_debugger.send_to_monitor('I need to go back one step.')
-					# 		is_deadlock = False
-					# 		self.local_direction = [-self.local_direction[0], -self.local_coordinate[1]]
-					# 	else:
-					# 		continue
 				else: # I have finish. I will not move
 					is_deadlock = True
-					self.local_debugger.send_to_monitor('Find deadlock.')
 
 				send_data = self.get_basic_status()
 				send_data['deadlock'] = is_deadlock
-				self.message_communication(send_data, condition_func=self.check_recv_deadlock, time_out=0.5)
+				self.message_communication(send_data, condition_func=self.check_recv_deadlock, time_out=0.01)
 
 				if is_deadlock == False:
-					self.local_debugger.send_to_monitor('walk')
 					self.walk_one_step()
 					break
 				else:
@@ -812,13 +844,15 @@ class Strategy_SRSS(Strategy):
 				# I am not the first one in queue
 				send_data = self.get_basic_status()
 				send_data['deadlock'] = False
-				self.message_communication(send_data, condition_func=self.check_recv_deadlock, time_out=0.5)
+				self.message_communication(send_data, condition_func=self.check_recv_deadlock, time_out=0.01)
 				# The first one in queue has deadlock -> shift
 				if self.global_deadlock[self.local_queue[0]] == True:
 					self.local_queue = self.local_queue[1:] + self.local_queue[0:1]
 				else:
+					# deadlock released, keep in place
+					self.local_debugger.log_local('Routing: Keep in Place.', tag='Status')
+					self.local_energy_level = self.local_energy_level - 0.04
 					break
-			break
 
 	def broadcast_coordinate(self):
 		# Coordinates of current and next
@@ -832,9 +866,10 @@ class Strategy_SRSS(Strategy):
 								[self.local_coordinate[0], self.local_coordinate[1]]]
 		send_data = self.get_basic_status()
 		send_data['coordinate'] = cur_next_coordinate
+		send_data['task_id'] = self.local_task_id
 		send_data['is_finish'] = self.checkFinished()
 		self.global_robots_coordinate = {}
-		self.message_communication(send_data, condition_func=self.check_recv_robots_coordinates, time_out=0.5)
+		self.message_communication(send_data, condition_func=self.check_recv_robots_coordinates, time_out=0.01)
 
 	def broadcast_polygon(self):
 		# Polygon 
@@ -854,10 +889,9 @@ class Strategy_SRSS(Strategy):
 					(my_rectangle[3][0], my_rectangle[3][1])]
 		send_data['polygon'] = polygon
 		self.global_robots_polygon = {}
-		self.message_communication(send_data, condition_func=self.check_recv_robots_polygons, time_out=0.5)
+		self.message_communication(send_data, condition_func=self.check_recv_robots_polygons, time_out=0.01)
 
 	def walk_one_step(self):
-		self.local_debugger.send_to_monitor('I walked.')
 		if self.checkFinished():
 			return
 
@@ -872,27 +906,37 @@ class Strategy_SRSS(Strategy):
 			# Return to the task direction even if you change direction in routing in last step
 			self.local_direction[0] = self.local_task_destination[0] - self.local_coordinate[0]
 			self.local_direction[1] = self.local_task_destination[1] - self.local_coordinate[1]
-			# self.local_debugger.send_to_monitor('coordinate: '+ str((int(self.local_coordinate[0]), int(self.local_coordinate[1]))))
 			os.system(core_cmd)
-			self.local_energy_level = self.local_energy_level - 1
+			self.local_energy_level = self.local_energy_level - 0.1
+			self.local_has_gone = self.local_has_gone + 1
+			self.local_debugger.log_local('Routing: Walk: %d' % self.local_has_gone, tag='Status')
 		else:
 			# If direction vector is 0-vector, keep in place
+			self.local_debugger.log_local('Routing: Keep in Place.', tag='Status')
+			self.local_energy_level = self.local_energy_level - 0.04
 			pass
 
 if __name__ == '__main__':
+	simulate_num_robots = 20
 	index = socket.gethostname()[1:]
 	# Use the current coordinate to compute
 	with open('../n%d.xy' % int(index), 'r') as f:
 		xy = f.read()
 		coordinate = [int(float(xy.split(' ')[0])), int(float(xy.split(' ')[1]))]
+	energy_level = [random.randint(80, 100) for i in range(simulate_num_robots)]
 	strategy_SRSS = Strategy_SRSS(id=int(index), \
 								coordinate=coordinate, \
 								direction=[1, 3], \
 								step_size=10, \
-								robot_radius=20, \
+								robot_radius=10, \
 								go_interval=0.1, \
-								num_robots=5, \
+								num_robots=simulate_num_robots, \
+								energy_level=energy_level[int(index) - 1], \
 								controlNet='172.16.0.254')
+	strategy_SRSS.global_task_list = [{'start': 5, 'duration': 40, 'radius' : 200, 'coordinate': [325, 475], 'new_task': True},
+									{'start': 30, 'duration': 10, 'radius' : 100, 'coordinate': [1200, 700], 'new_task': True},
+									{'start': 60, 'duration': 10, 'radius' : 70, 'coordinate': [1075, 175], 'new_task': True}]
+	# strategy_SRSS.global_num_tasks = len(strategy_SRSS.global_task_list)
 	while True:
 		strategy_SRSS.go()
 

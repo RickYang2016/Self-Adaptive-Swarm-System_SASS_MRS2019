@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario compiled="true" name="10.xml" version="1.0" xmlns="nmfPlan" xmlns:CORE="coreSpecific">
+  <network id="wlan21" name="wlan21">
+    <point lat="47.578521615" lon="-122.103449748" type="gps"/>
+    <type>wireless</type>
+    <alias domain="COREID">21</alias>
+    <member type="interface">n1/eth0</member>
+    <member type="interface">n2/eth0</member>
+    <member type="interface">n3/eth0</member>
+    <member type="interface">n4/eth0</member>
+    <member type="interface">n5/eth0</member>
+    <member type="interface">n6/eth0</member>
+    <member type="interface">n7/eth0</member>
+    <member type="interface">n8/eth0</member>
+    <member type="interface">n9/eth0</member>
+    <member type="interface">n10/eth0</member>
+    <member type="channel">wlan21/wireless</member>
+    <channel id="wlan21/wireless" name="wireless">
+      <type domain="CORE">basic_range</type>
+      <parameter name="range">1500.0</parameter>
+      <parameter name="bandwidth">54000000</parameter>
+      <parameter name="jitter">0.0</parameter>
+      <parameter name="delay">20000</parameter>
+      <parameter name="error">0.0</parameter>
+      <member index="0" type="interface">n1/eth0</member>
+      <member index="1" type="interface">n2/eth0</member>
+      <member index="2" type="interface">n3/eth0</member>
+      <member index="3" type="interface">n4/eth0</member>
+      <member index="4" type="interface">n5/eth0</member>
+      <member index="5" type="interface">n6/eth0</member>
+      <member index="6" type="interface">n7/eth0</member>
+      <member index="7" type="interface">n8/eth0</member>
+      <member index="8" type="interface">n9/eth0</member>
+      <member index="9" type="interface">n10/eth0</member>
+    </channel>
+  </network>
+  <router id="n1" name="n1">
+    <type domain="CORE">mdr</type>
+    <interface id="n1/eth0" name="eth0">
+      <member index="0" type="channel">wlan21/wireless</member>
+      <member type="network">wlan21</member>
+      <address type="mac">00:00:00:aa:00:14</address>
+      <address type="IPv4">10.0.0.1/24</address>
+      <address type="IPv6">2001::1/128</address>
+    </interface>
+    <alias domain="COREID">1</alias>
+    <point lat="47.5784646017" lon="-122.131116817" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+  </router>
+  <router id="n2" name="n2">
+    <type domain="CORE">mdr</type>
+    <interface id="n2/eth0" name="eth0">
+      <member index="1" type="channel">wlan21/wireless</member>
+      <member type="network">wlan21</member>
+      <address type="mac">00:00:00:aa:00:15</address>
+      <address type="IPv4">10.0.0.2/24</address>
+      <address type="IPv6">2001::2/128</address>
+    </interface>
+    <alias domain="COREID">2</alias>
+    <point lat="47.5774398561" lon="-122.131253449" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+  </router>
+  <router id="n3" name="n3">
+    <type domain="CORE">mdr</type>
+    <interface id="n3/eth0" name="eth0">
+      <member index="2" type="channel">wlan21/wireless</member>
+      <member type="network">wlan21</member>
+      <address type="mac">00:00:00:aa:00:16</address>
+      <address type="IPv4">10.0.0.3/24</address>
+      <address type="IPv6">2001::3/128</address>
+    </interface>
+    <alias domain="COREID">3</alias>
+    <point lat="47.56823446" lon="-122.131206263" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+  </router>
+  <router id="n4" name="n4">
+    <type domain="CORE">mdr</type>
+    <interface id="n4/eth0" name="eth0">
+      <member index="3" type="channel">wlan21/wireless</member>
+      <member type="network">wlan21</member>
+      <address type="mac">00:00:00:aa:00:17</address>
+      <address type="IPv4">10.0.0.4/24</address>
+      <address type="IPv6">2001::4/128</address>
+    </interface>
+    <alias domain="COREID">4</alias>
+    <point lat="47.5764954786" lon="-122.131308963" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+  </router>
+  <router id="n5" name="n5">
+    <type domain="CORE">mdr</type>
+    <interface id="n5/eth0" name="eth0">
+      <member index="4" type="channel">wlan21/wireless</member>
+      <member type="network">wlan21</member>
+      <address type="mac">00:00:00:aa:00:18</address>
+      <address type="IPv4">10.0.0.5/24</address>
+      <address type="IPv6">2001::5/128</address>
+    </interface>
+    <alias domain="COREID">5</alias>
+    <point lat="47.5705045637" lon="-122.131547648" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+  </router>
+  <router id="n6" name="n6">
+    <type domain="CORE">mdr</type>
+    <interface id="n6/eth0" name="eth0">
+      <member index="5" type="channel">wlan21/wireless</member>
+      <member type="network">wlan21</member>
+      <address type="mac">00:00:00:aa:00:05</address>
+      <address type="IPv4">10.0.0.6/24</address>
+      <address type="IPv6">2001::6/128</address>
+    </interface>
+    <alias domain="COREID">6</alias>
+    <point lat="47.5755915871" lon="-122.131363805" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+  </router>
+  <router id="n7" name="n7">
+    <type domain="CORE">mdr</type>
+    <interface id="n7/eth0" name="eth0">
+      <member index="6" type="channel">wlan21/wireless</member>
+      <member type="network">wlan21</member>
+      <address type="mac">00:00:00:aa:00:06</address>
+      <address type="IPv4">10.0.0.7/24</address>
+      <address type="IPv6">2001::7/128</address>
+    </interface>
+    <alias domain="COREID">7</alias>
+    <point lat="47.5716633592" lon="-122.131289159" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+  </router>
+  <router id="n8" name="n8">
+    <type domain="CORE">mdr</type>
+    <interface id="n8/eth0" name="eth0">
+      <member index="7" type="channel">wlan21/wireless</member>
+      <member type="network">wlan21</member>
+      <address type="mac">00:00:00:aa:00:07</address>
+      <address type="IPv4">10.0.0.8/24</address>
+      <address type="IPv6">2001::8/128</address>
+    </interface>
+    <alias domain="COREID">8</alias>
+    <point lat="47.5744158233" lon="-122.131163854" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+  </router>
+  <router id="n9" name="n9">
+    <type domain="CORE">mdr</type>
+    <interface id="n9/eth0" name="eth0">
+      <member index="8" type="channel">wlan21/wireless</member>
+      <member type="network">wlan21</member>
+      <address type="mac">00:00:00:aa:00:17</address>
+      <address type="IPv4">10.0.0.20/24</address>
+      <address type="IPv6">2001::20/128</address>
+    </interface>
+    <alias domain="COREID">9</alias>
+    <point lat="47.5728098669" lon="-122.131190419" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+  </router>
+  <router id="n10" name="n10">
+    <type domain="CORE">mdr</type>
+    <interface id="n10/eth0" name="eth0">
+      <member index="9" type="channel">wlan21/wireless</member>
+      <member type="network">wlan21</member>
+      <address type="mac">00:00:00:aa:00:0c</address>
+      <address type="IPv4">10.0.0.9/24</address>
+      <address type="IPv6">2001::9/128</address>
+    </interface>
+    <alias domain="COREID">10</alias>
+    <point lat="47.5693712486" lon="-122.13160627" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+  </router>
+  <router id="n11" name="n11">
+    <type domain="CORE">mdr</type>
+    <alias domain="COREID">11</alias>
+    <point lat="47.5697731496" lon="-122.108345606" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_goal point.png"/>
+  </router>
+  <router id="n12" name="n12">
+    <type domain="CORE">mdr</type>
+    <alias domain="COREID">12</alias>
+    <point lat="47.5769200596" lon="-122.110976836" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_goal point.png"/>
+  </router>
+  <router id="n22" name="n22">
+    <type domain="CORE">mdr</type>
+    <alias domain="COREID">22</alias>
+    <point lat="47.5730120236" lon="-122.125821967" type="gps"/>
+    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_goal point.png"/>
+  </router>
+  <CORE:defaultservices>
+    <device type="mdr">
+      <service name="zebra"/>
+      <service name="OSPFv3MDR"/>
+      <service name="vtysh"/>
+      <service name="IPForward"/>
+      <service name="MyService"/>
+    </device>
+  </CORE:defaultservices>
+  <CORE:sessionconfig>
+    <origin alt="2.0" lat="47.5791667" lon="-122.132322" scale100="150.0"/>
+    <options>
+      <parameter name="controlnet">172.16.0.255/24</parameter>
+    </options>
+    <metadata>
+      <parameter name="global_options">interface_names=no ip_addresses=no ipv6_addresses=no node_labels=yes link_labels=yes show_api=no background_images=no annotations=yes grid=no traffic_start=0</parameter>
+      <parameter name="canvas c1">{name {Canvas1}} {refpt {0 0 47.5791667 -122.132322 2.0}} {scale 150.0} {size {1500 900}}</parameter>
+    </metadata>
+  </CORE:sessionconfig>
+</scenario>
