@@ -54,6 +54,7 @@ class Strategy_SRSS(Strategy):
 	global_robots_task_id = {}			# {1: 2, 2:1, 3:1, ...} Only used in routing - first priority
 	global_deadlock = {}
 	global_is_finish_task = {}			# {1: True, 4: False, 8: False} Only consider about my group
+	global_time_step = 0				# For better logging and collecting data
 
 	local_debugger = None
 
@@ -82,10 +83,11 @@ class Strategy_SRSS(Strategy):
 		self.local_debugger = COREDebuggerVirtual((controlNet, 12888), path='/home/zhiwei/SRSS/log', filename=str(self.local_id))
 		self.time_start = time.time()
 		self.local_debugger.log_local('Start.', tag='Status')
+		self.local_debugger.send_to_monitor({'id': self.local_id, 'coordinate': self.local_coordinate}, tag='Status')
 
 	def checkFinished(self):
-		return (math.fabs(self.local_task_destination[0] - self.local_coordinate[0]) < self.local_step_size / 2 and \
-				math.fabs(self.local_task_destination[1] - self.local_coordinate[1]) < self.local_step_size / 2)
+		return (math.fabs(self.local_task_destination[0] - self.local_coordinate[0]) < self.local_step_size and \
+				math.fabs(self.local_task_destination[1] - self.local_coordinate[1]) < self.local_step_size)
 
 	def go(self):
 		self.local_debugger.log_local('%.2f' % self.local_energy_level, tag='Battery Energy')
@@ -110,6 +112,7 @@ class Strategy_SRSS(Strategy):
 			# Formation End printed in formation step3
 			self.local_stage = 'routing'
 		elif self.local_stage == 'routing':
+			self.global_time_step = self.global_time_step + 1
 			self.local_debugger.log_local('Routing Start.', tag='Status')
 			if self.checkFinished():
 				self.local_debugger.send_to_monitor('I finished my task!')
@@ -132,6 +135,7 @@ class Strategy_SRSS(Strategy):
 					self.reallocate_tasks()
 					return
 		elif self.local_stage == 'end':
+			self.global_time_step = self.global_time_step + 1
 			if not self.check_new_tasks():
 				self.broadcast_coordinate()
 			else:
@@ -163,11 +167,9 @@ class Strategy_SRSS(Strategy):
 				self.local_debugger.log_local('A New Task Released.', tag='Task')
 				self.local_debugger.send_to_monitor('A New Task Released.', tag='Task')
 		if self.local_id == 1:
-			core_cmd = "coresendmsg -a %s node number=%s xpos=%s ypos=%s" % (self.controlNet, \
-																			self.global_num_robots+self.global_num_tasks+1, \
-																			str(int(self.global_task_list[self.global_num_tasks-1]['coordinate'][0])), \
-																			str(int(self.global_task_list[self.global_num_tasks-1]['coordinate'][1])))
-			os.system(core_cmd)
+			if self.global_num_tasks != 0:
+				self.local_debugger.send_to_monitor({'new_task': True, 'coordinate': [int(self.global_task_list[self.global_num_tasks-1]['coordinate'][0]), \
+																				 	 int(self.global_task_list[self.global_num_tasks-1]['coordinate'][1])]}, tag='Status')
 
 	def check_new_tasks(self):
 		if self.local_stage != 'selection' and self.local_stage != 'formation':
@@ -353,9 +355,9 @@ class Strategy_SRSS(Strategy):
 		send_data['energy'] = self.local_energy_level
 		self.message_communication(send_data, condition_func=self.check_recv_all_energy, time_out=0.01)
 		if self.local_negotiation == 1:
-			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[1])]
+			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[0])]
 		elif self.local_negotiation == 2:
-			self.local_queue = sorted(self.global_energy_level.iteritems(), key=lambda x:(x[1], x[0]), reverse = True)
+			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:(x[0], x[0]))]
 
 	# Step2: Exchange priority queue
 	def selection_step2(self):
@@ -518,7 +520,7 @@ class Strategy_SRSS(Strategy):
 		if self.local_negotiation == 1:
 			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[1])]
 		elif self.local_negotiation == 2:
-			self.local_queue = sorted(self.global_energy_level.iteritems(), key=lambda x:(x[1], x[0]), reverse = True)
+			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:(x[1], x[0]))]
 
 	def formation_step2(self):
 		send_data = self.get_basic_status()
@@ -615,6 +617,22 @@ class Strategy_SRSS(Strategy):
 		except Exception as e:
 			raise e
 
+	def check_recv_local_collision_energy(self, recv_data):
+		try:
+			recv_id = recv_data['id']
+			# throw out the packet that has different task_id
+			if recv_id in self.local_collision_queue:
+				self.global_energy_level[recv_id] = recv_data['energy']
+			if len(self.global_energy_level) == len(self.local_collision_queue):
+				return True
+			else:
+				#self.local_debugger.send_to_monitor('collision_taskid: %d %d' % (len(self.global_robots_task_id), len(self.local_collision_queue)))
+				return False
+		except KeyError:
+			pass
+		except Exception as e:
+			raise e
+
 	def check_recv_local_collision_queue(self, recv_data):
 		try:
 			recv_id = recv_data['id']
@@ -678,6 +696,7 @@ class Strategy_SRSS(Strategy):
 			self.routing_execution()
 			self.global_collision_queue = {}
 			self.global_robots_task_id = {}
+			self.global_energy_level = {}
 			self.global_negotiation_queue = {}
 			self.global_agreement = {}
 			self.global_deadlock = {}
@@ -760,10 +779,16 @@ class Strategy_SRSS(Strategy):
 		self.global_robots_task_id = {}
 		# TODO: check_recv_local_collision_task_id not exists
 		self.message_communication(send_data, condition_func=self.check_recv_local_collision_task_id, time_out=0.01)
+		send_data = self.get_basic_status()
+		send_data['energy'] = self.local_energy_level
+		self.global_energy_level = {}
+		# TODO: check_recv_local_collision_task_id not exists
+		self.message_communication(send_data, condition_func=self.check_recv_local_collision_energy, time_out=0.01)
+		taskid_energy = [(i, self.global_robots_task_id[i], self.global_energy_level[i]) for i in self.local_collision_queue]
 		if self.local_negotiation == 1:
-			self.local_queue = [i[0] for i in sorted(self.global_robots_task_id.items(), key=lambda x:x[1])]
+			self.local_queue = [i[0] for i in sorted(taskid_energy, key=lambda x:(x[2], x[2], x[0]))]
 		elif self.local_negotiation == 2:
-			self.local_queue = [i[0] for i in sorted(self.global_robots_task_id.items(), key=lambda x:(x[1], x[0]), reverse = True)]
+			self.local_queue = [i[0] for i in sorted(taskid_energy, key=lambda x:(x[2], x[0]))]
 
 	# Exchange Priority queue: Exactly same as selection part - step2
 	def routing_step4(self):
@@ -818,7 +843,10 @@ class Strategy_SRSS(Strategy):
 					# theta1 = acos(a`b/(|a||b|))
 					relative_direction = closest_robot_coordinate - my_coordinate
 					theta1 = math.acos(np.inner(my_direction, relative_direction) / (np.linalg.norm(my_direction) * np.linalg.norm(relative_direction)))
-					my_angle = math.atan(self.local_direction[1] / self.local_direction[0])
+					if self.local_direction[0] != 0:
+						my_angle = math.atan(self.local_direction[1] / self.local_direction[0])
+					else:
+						my_angle = math.pi / 2
 
 					if theta1 < theta:
 						new_angle = my_angle + theta - theta1
@@ -850,7 +878,7 @@ class Strategy_SRSS(Strategy):
 					self.local_queue = self.local_queue[1:] + self.local_queue[0:1]
 				else:
 					# deadlock released, keep in place
-					self.local_debugger.log_local('Routing: Keep in Place.', tag='Status')
+					self.local_debugger.log_local('Routing %d: Walk: %d' % (self.global_time_step, self.local_has_gone), tag='Status')
 					self.local_energy_level = self.local_energy_level - 0.04
 					break
 
@@ -892,29 +920,23 @@ class Strategy_SRSS(Strategy):
 		self.message_communication(send_data, condition_func=self.check_recv_robots_polygons, time_out=0.01)
 
 	def walk_one_step(self):
-		if self.checkFinished():
-			return
-
-		L2norm = math.sqrt(self.local_direction[0] * self.local_direction[0] + self.local_direction[1] * self.local_direction[1])
-		if L2norm != 0 and not self.checkFinished():
-			self.local_coordinate[0] = self.local_coordinate[0] + self.local_step_size * self.local_direction[0] / L2norm
-			self.local_coordinate[1] = self.local_coordinate[1] + self.local_step_size * self.local_direction[1] / L2norm
-			core_cmd = "coresendmsg -a %s node number=%s xpos=%s ypos=%s" % (self.controlNet, \
-																			self.local_id, \
-																			str(int(self.local_coordinate[0])), \
-																			str(int(self.local_coordinate[1])))
-			# Return to the task direction even if you change direction in routing in last step
-			self.local_direction[0] = self.local_task_destination[0] - self.local_coordinate[0]
-			self.local_direction[1] = self.local_task_destination[1] - self.local_coordinate[1]
-			os.system(core_cmd)
-			self.local_energy_level = self.local_energy_level - 0.1
-			self.local_has_gone = self.local_has_gone + 1
-			self.local_debugger.log_local('Routing: Walk: %d' % self.local_has_gone, tag='Status')
-		else:
-			# If direction vector is 0-vector, keep in place
-			self.local_debugger.log_local('Routing: Keep in Place.', tag='Status')
-			self.local_energy_level = self.local_energy_level - 0.04
-			pass
+		if not self.checkFinished():
+			L2norm = math.sqrt(self.local_direction[0] * self.local_direction[0] + self.local_direction[1] * self.local_direction[1])
+			if L2norm != 0:
+				self.local_coordinate[0] = self.local_coordinate[0] + self.local_step_size * self.local_direction[0] / L2norm
+				self.local_coordinate[1] = self.local_coordinate[1] + self.local_step_size * self.local_direction[1] / L2norm
+				# Return to the task direction even if you change direction in routing in last step
+				self.local_direction[0] = self.local_task_destination[0] - self.local_coordinate[0]
+				self.local_direction[1] = self.local_task_destination[1] - self.local_coordinate[1]
+				self.local_debugger.send_to_monitor({'id': self.local_id, 'coordinate': self.local_coordinate}, tag='Status')
+				self.local_debugger.log_local({'id': self.local_id, 'coordinate': self.local_coordinate}, tag='Status')
+				self.local_energy_level = self.local_energy_level - 0.1
+				self.local_has_gone = self.local_has_gone + 1
+			else:
+				# If direction vector is 0-vector, keep in place
+				self.local_energy_level = self.local_energy_level - 0.04
+				pass
+		self.local_debugger.log_local('Routing %d: Walk: %d' % (self.global_time_step, self.local_has_gone), tag='Status')
 
 if __name__ == '__main__':
 	simulate_num_robots = 20
@@ -923,7 +945,33 @@ if __name__ == '__main__':
 	with open('../n%d.xy' % int(index), 'r') as f:
 		xy = f.read()
 		coordinate = [int(float(xy.split(' ')[0])), int(float(xy.split(' ')[1]))]
-	energy_level = [random.randint(80, 100) for i in range(simulate_num_robots)]
+
+	# init_coordinate = [	[[905, 385], [200, 152], [190, 40], [1475, 223], [115, 775], [328, 369], [338, 290], [841, 391], [287, 900], [436, 599], [1195, 366], [220, 120], [123, 803], [855, 889], [134, 242], [1148, 470], [1114, 229], [419, 687], [524, 719], [1462, 444]],
+	# 					[[739, 728], [1147, 329], [678, 181], [454, 534], [187, 819], [1371, 554], [1147, 368], [824, 680], [1035, 564], [1279, 249], [426, 340], [220, 680], [925, 50], [705, 778], [125, 440], [1077, 823], [1262, 783], [812, 520], [1220, 269], [1321, 324]],
+	# 					[[912, 577], [531, 533], [886, 91], [1254, 253], [9, 604], [1206, 626], [806, 31], [1178, 465], [246, 431], [1081, 469], [1430, 772], [941, 659], [1024, 119], [700, 587], [721, 641], [22, 305], [1410, 883], [1322, 753], [1487, 405], [982, 103]],
+	# 					[[567, 632], [861, 868], [901, 858], [764, 711], [1206, 707], [492, 105], [556, 322], [232, 202], [1306, 120], [998, 321], [662, 6], [1440, 230], [796, 109], [838, 666], [351, 702], [51, 210], [1126, 476], [773, 144], [9, 810], [678, 73]],
+	# 					[[330, 101], [240, 509], [177, 784], [383, 92], [1241, 365], [183, 134], [1016, 807], [155, 779], [186, 362], [402, 573], [250, 162], [971, 235], [846, 687], [1044, 643], [1429, 128], [1021, 640], [449, 390], [742, 330], [204, 595], [1495, 247]],
+	# 					[[819, 155], [183, 820], [519, 618], [441, 171], [674, 331], [645, 545], [160, 548], [356, 84], [1298, 473], [925, 805], [1385, 326], [897, 402], [660, 868], [1040, 104], [1472, 839], [1265, 15], [1422, 717], [535, 812], [1131, 259], [1463, 717]],
+	# 					[[579, 84], [488, 178], [280, 804], [342, 416], [1487, 203], [464, 487], [1345, 773], [1046, 595], [784, 363], [669, 615], [271, 859], [1270, 601], [444, 197], [601, 547], [650, 493], [608, 673], [169, 376], [1407, 669], [1468, 200], [1147, 401]],
+	# 					[[251, 196], [1369, 320], [914, 603], [126, 45], [928, 649], [741, 163], [1421, 877], [889, 169], [193, 646], [128, 404], [142, 760], [813, 216], [178, 281], [362, 776], [712, 163], [411, 704], [1325, 481], [707, 553], [1239, 898], [1266, 668]],
+	# 					[[748, 469], [404, 515], [878, 782], [137, 152], [280, 36], [713, 334], [620, 439], [115, 636], [275, 845], [66, 352], [965, 868], [629, 156], [805, 775], [25, 439], [1285, 281], [447, 472], [1017, 238], [956, 156], [1126, 765], [852, 464]],
+	# 					[[658, 362], [748, 350], [320, 33], [10, 519], [1021, 368], [463, 495], [303, 321], [1394, 715], [130, 174], [1257, 197], [329, 618], [315, 499], [1230, 456], [276, 217], [439, 530], [491, 744], [541, 637], [97, 306], [457, 141], [1081, 245]]]
+	# round_i = 9
+	# coordinate = [init_coordinate[round_i][int(index)-1][0], init_coordinate[round_i][int(index)-1][1]]
+	energy_level_equal = [100] * simulate_num_robots
+	energy_level_random = [	[90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90], \
+							[89, 90, 89, 90, 90, 87, 89, 88, 90, 90, 89, 90, 89, 91, 89, 89, 88, 90, 91, 90], \
+							[89, 91, 86, 86, 90, 88, 88, 89, 93, 88, 89, 91, 89, 90, 86, 88, 91, 87, 90, 91], \
+							[92, 89, 93, 84, 92, 89, 83, 88, 88, 91, 89, 91, 91, 91, 88, 87, 90, 88, 88, 87], \
+							[92, 91, 95, 88, 91, 91, 91, 94, 80, 93, 83, 90, 94, 88, 87, 92, 97, 89, 85, 93], \
+							[96, 89, 84, 93, 80, 100, 84, 94, 89, 87, 81, 85, 100, 94, 93, 98, 89, 94, 86, 96], \
+							[78, 85, 79, 98, 85, 90, 97, 86, 93, 94, 86, 85, 92, 90, 85, 85, 84, 86, 92, 93], \
+							[81, 81, 94, 80, 95, 89, 87, 90, 92, 80, 80, 97, 72, 96, 79, 77, 92, 94, 98, 98], \
+							[80, 86, 100, 82, 91, 85, 85, 90, 100, 84, 98, 83, 93, 78, 91, 96, 91, 82, 80, 84], \
+							[85, 100, 80, 89, 86, 94, 84, 89, 90, 83, 77, 96, 93, 83, 76, 100, 97, 87, 97, 84], \
+							[82, 79, 75, 93, 92, 88, 89, 72, 100, 84, 62, 88, 100, 100, 89, 65, 85, 96, 69, 100]]
+
+	energy_level = energy_level_random[:simulate_num_robots]
 	strategy_SRSS = Strategy_SRSS(id=int(index), \
 								coordinate=coordinate, \
 								direction=[1, 3], \
@@ -931,11 +979,15 @@ if __name__ == '__main__':
 								robot_radius=10, \
 								go_interval=0.1, \
 								num_robots=simulate_num_robots, \
-								energy_level=energy_level[int(index) - 1], \
+								energy_level=energy_level[7][int(index) - 1], \
 								controlNet='172.16.0.254')
 	strategy_SRSS.global_task_list = [{'start': 5, 'duration': 40, 'radius' : 200, 'coordinate': [325, 475], 'new_task': True},
 									{'start': 30, 'duration': 10, 'radius' : 100, 'coordinate': [1200, 700], 'new_task': True},
-									{'start': 60, 'duration': 10, 'radius' : 70, 'coordinate': [1075, 175], 'new_task': True}]
+									{'start': 30, 'duration': 10, 'radius' : 70, 'coordinate': [1075, 175], 'new_task': True}]
+	# strategy_SRSS.global_task_list = [{'start': 5, 'duration': 40, 'radius' : 200, 'coordinate': [325, 475], 'new_task': True},
+	# 								{'start': 5, 'duration': 10, 'radius' : 100, 'coordinate': [1200, 700], 'new_task': True},
+	# 								{'start': 5, 'duration': 10, 'radius' : 70, 'coordinate': [1075, 175], 'new_task': True}]
+	# strategy_SRSS.global_task_list = [{'start': 5, 'duration': 40, 'radius' : 200, 'coordinate': [325, 475], 'new_task': True}]
 	# strategy_SRSS.global_num_tasks = len(strategy_SRSS.global_task_list)
 	while True:
 		strategy_SRSS.go()
