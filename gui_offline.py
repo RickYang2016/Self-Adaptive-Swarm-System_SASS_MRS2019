@@ -75,9 +75,11 @@ while True:
         if not this_id in coordinate:
             coordinate[this_id] = this_coordinate
             img[this_id] = canvas.create_image(this_coordinate[0], this_coordinate[1], image=photo_robot[int(random.random()*2)])
+            canvas.create_circle(this_coordinate[0], this_coordinate[1], 50, outline="#F00", width=5)
             canvas.update()
         else:
             canvas.move(img[this_id], this_coordinate[0]-coordinate[this_id][0], this_coordinate[1]-coordinate[this_id][1])
+            canvas.create_line(this_coordinate[0], this_coordinate[1], coordinate[this_id][0], coordinate[this_id][1], dash=(4, 2))
             coordinate[this_id] = this_coordinate
             canvas.update()
 

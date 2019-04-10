@@ -1,0 +1,1 @@
+/home/zhiwei/SRSS/strategy.py > my.log

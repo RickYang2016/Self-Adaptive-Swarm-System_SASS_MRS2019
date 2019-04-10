@@ -40,7 +40,7 @@ class Logger():
 
             # file name
             if filename != '':
-                self.log_file_path = self.log_file_path + '/' + filename
+                self.log_file_path = self.log_file_path + '/%s_%s.log' % (self.time_generator(), filename)
             else:
                 self.log_file_path = self.log_file_path + '/%s_%s.log' % (self.time_generator(type='minutes'), self.id_generator())
             self.debug_print('Log file name is %s.' % self.log_file_path)
@@ -162,10 +162,10 @@ class COREDebuggerVirtual():
         self.logger.enable_remote(monitor_addr)
 
     def send_to_monitor(self, log_str, tag='default', append_time=True):
-        self.logger.log_local_and_remote(log_str, tag=tag, append_time=append_time)
+        self.logger.log_remote(log_str, tag=tag, append_time=append_time)
 
-    def log_local(self, log_str):
-        self.logger.log_local(log_str)
+    def log_local(self, log_str, tag='default', append_time=True):
+        self.logger.log_local(log_str, tag=tag, append_time=append_time)
 
     def close_socket(self):
         self.logger.disable_remote()

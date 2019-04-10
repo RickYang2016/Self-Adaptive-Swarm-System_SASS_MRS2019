@@ -355,9 +355,9 @@ class Strategy_SRSS(Strategy):
 		send_data['energy'] = self.local_energy_level
 		self.message_communication(send_data, condition_func=self.check_recv_all_energy, time_out=0.01)
 		if self.local_negotiation == 1:
-			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[0])]
+			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:x[1])]
 		elif self.local_negotiation == 2:
-			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:(x[0], x[0]))]
+			self.local_queue = [i[0] for i in sorted(self.global_energy_level.items(), key=lambda x:(x[1], x[0]))]
 
 	# Step2: Exchange priority queue
 	def selection_step2(self):
@@ -786,7 +786,7 @@ class Strategy_SRSS(Strategy):
 		self.message_communication(send_data, condition_func=self.check_recv_local_collision_energy, time_out=0.01)
 		taskid_energy = [(i, self.global_robots_task_id[i], self.global_energy_level[i]) for i in self.local_collision_queue]
 		if self.local_negotiation == 1:
-			self.local_queue = [i[0] for i in sorted(taskid_energy, key=lambda x:(x[2], x[2], x[0]))]
+			self.local_queue = [i[0] for i in sorted(taskid_energy, key=lambda x:(x[1], x[2], x[0]))]
 		elif self.local_negotiation == 2:
 			self.local_queue = [i[0] for i in sorted(taskid_energy, key=lambda x:(x[2], x[0]))]
 
@@ -849,7 +849,7 @@ class Strategy_SRSS(Strategy):
 						my_angle = math.pi / 2
 
 					if theta1 < theta:
-						new_angle = my_angle + theta - theta1
+						new_angle = my_angle + theta - theta1 + 10 * math.pi / 180
 					else:
 						new_angle = my_angle
 
@@ -946,18 +946,6 @@ if __name__ == '__main__':
 		xy = f.read()
 		coordinate = [int(float(xy.split(' ')[0])), int(float(xy.split(' ')[1]))]
 
-	# init_coordinate = [	[[905, 385], [200, 152], [190, 40], [1475, 223], [115, 775], [328, 369], [338, 290], [841, 391], [287, 900], [436, 599], [1195, 366], [220, 120], [123, 803], [855, 889], [134, 242], [1148, 470], [1114, 229], [419, 687], [524, 719], [1462, 444]],
-	# 					[[739, 728], [1147, 329], [678, 181], [454, 534], [187, 819], [1371, 554], [1147, 368], [824, 680], [1035, 564], [1279, 249], [426, 340], [220, 680], [925, 50], [705, 778], [125, 440], [1077, 823], [1262, 783], [812, 520], [1220, 269], [1321, 324]],
-	# 					[[912, 577], [531, 533], [886, 91], [1254, 253], [9, 604], [1206, 626], [806, 31], [1178, 465], [246, 431], [1081, 469], [1430, 772], [941, 659], [1024, 119], [700, 587], [721, 641], [22, 305], [1410, 883], [1322, 753], [1487, 405], [982, 103]],
-	# 					[[567, 632], [861, 868], [901, 858], [764, 711], [1206, 707], [492, 105], [556, 322], [232, 202], [1306, 120], [998, 321], [662, 6], [1440, 230], [796, 109], [838, 666], [351, 702], [51, 210], [1126, 476], [773, 144], [9, 810], [678, 73]],
-	# 					[[330, 101], [240, 509], [177, 784], [383, 92], [1241, 365], [183, 134], [1016, 807], [155, 779], [186, 362], [402, 573], [250, 162], [971, 235], [846, 687], [1044, 643], [1429, 128], [1021, 640], [449, 390], [742, 330], [204, 595], [1495, 247]],
-	# 					[[819, 155], [183, 820], [519, 618], [441, 171], [674, 331], [645, 545], [160, 548], [356, 84], [1298, 473], [925, 805], [1385, 326], [897, 402], [660, 868], [1040, 104], [1472, 839], [1265, 15], [1422, 717], [535, 812], [1131, 259], [1463, 717]],
-	# 					[[579, 84], [488, 178], [280, 804], [342, 416], [1487, 203], [464, 487], [1345, 773], [1046, 595], [784, 363], [669, 615], [271, 859], [1270, 601], [444, 197], [601, 547], [650, 493], [608, 673], [169, 376], [1407, 669], [1468, 200], [1147, 401]],
-	# 					[[251, 196], [1369, 320], [914, 603], [126, 45], [928, 649], [741, 163], [1421, 877], [889, 169], [193, 646], [128, 404], [142, 760], [813, 216], [178, 281], [362, 776], [712, 163], [411, 704], [1325, 481], [707, 553], [1239, 898], [1266, 668]],
-	# 					[[748, 469], [404, 515], [878, 782], [137, 152], [280, 36], [713, 334], [620, 439], [115, 636], [275, 845], [66, 352], [965, 868], [629, 156], [805, 775], [25, 439], [1285, 281], [447, 472], [1017, 238], [956, 156], [1126, 765], [852, 464]],
-	# 					[[658, 362], [748, 350], [320, 33], [10, 519], [1021, 368], [463, 495], [303, 321], [1394, 715], [130, 174], [1257, 197], [329, 618], [315, 499], [1230, 456], [276, 217], [439, 530], [491, 744], [541, 637], [97, 306], [457, 141], [1081, 245]]]
-	# round_i = 9
-	# coordinate = [init_coordinate[round_i][int(index)-1][0], init_coordinate[round_i][int(index)-1][1]]
 	energy_level_equal = [100] * simulate_num_robots
 	energy_level_random = [	[90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90], \
 							[89, 90, 89, 90, 90, 87, 89, 88, 90, 90, 89, 90, 89, 91, 89, 89, 88, 90, 91, 90], \
@@ -969,7 +957,8 @@ if __name__ == '__main__':
 							[81, 81, 94, 80, 95, 89, 87, 90, 92, 80, 80, 97, 72, 96, 79, 77, 92, 94, 98, 98], \
 							[80, 86, 100, 82, 91, 85, 85, 90, 100, 84, 98, 83, 93, 78, 91, 96, 91, 82, 80, 84], \
 							[85, 100, 80, 89, 86, 94, 84, 89, 90, 83, 77, 96, 93, 83, 76, 100, 97, 87, 97, 84], \
-							[82, 79, 75, 93, 92, 88, 89, 72, 100, 84, 62, 88, 100, 100, 89, 65, 85, 96, 69, 100]]
+							[82, 79, 75, 93, 92, 88, 89, 72, 100, 84, 62, 88, 100, 100, 89, 65, 85, 96, 69, 100], \
+							[92, 82, 83, 89, 93, 93, 80, 92, 92, 90, 94, 96, 99, 100, 97, 88, 95, 81, 100, 87]]
 
 	energy_level = energy_level_random[:simulate_num_robots]
 	strategy_SRSS = Strategy_SRSS(id=int(index), \
@@ -979,11 +968,11 @@ if __name__ == '__main__':
 								robot_radius=10, \
 								go_interval=0.1, \
 								num_robots=simulate_num_robots, \
-								energy_level=energy_level[7][int(index) - 1], \
+								energy_level=energy_level[11][int(index) - 1], \
 								controlNet='172.16.0.254')
 	strategy_SRSS.global_task_list = [{'start': 5, 'duration': 40, 'radius' : 200, 'coordinate': [325, 475], 'new_task': True},
 									{'start': 30, 'duration': 10, 'radius' : 100, 'coordinate': [1200, 700], 'new_task': True},
-									{'start': 30, 'duration': 10, 'radius' : 70, 'coordinate': [1075, 175], 'new_task': True}]
+									{'start': 60, 'duration': 10, 'radius' : 70, 'coordinate': [1075, 175], 'new_task': True}]
 	# strategy_SRSS.global_task_list = [{'start': 5, 'duration': 40, 'radius' : 200, 'coordinate': [325, 475], 'new_task': True},
 	# 								{'start': 5, 'duration': 10, 'radius' : 100, 'coordinate': [1200, 700], 'new_task': True},
 	# 								{'start': 5, 'duration': 10, 'radius' : 70, 'coordinate': [1075, 175], 'new_task': True}]

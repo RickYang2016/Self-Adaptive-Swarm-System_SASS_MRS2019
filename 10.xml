@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scenario compiled="true" name="10.xml" version="1.0" xmlns="nmfPlan" xmlns:CORE="coreSpecific">
   <network id="wlan21" name="wlan21">
-    <point lat="47.578521615" lon="-122.103449748" type="gps"/>
+    <point lat="47.5785621009" lon="-122.103449056" type="gps"/>
     <type>wireless</type>
     <alias domain="COREID">21</alias>
     <member type="interface">n1/eth0</member>
@@ -44,7 +44,7 @@
       <address type="IPv6">2001::1/128</address>
     </interface>
     <alias domain="COREID">1</alias>
-    <point lat="47.5784646017" lon="-122.131116817" type="gps"/>
+    <point lat="47.5785050879" lon="-122.131116147" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n2" name="n2">
@@ -57,7 +57,7 @@
       <address type="IPv6">2001::2/128</address>
     </interface>
     <alias domain="COREID">2</alias>
-    <point lat="47.5774398561" lon="-122.131253449" type="gps"/>
+    <point lat="47.5774803424" lon="-122.131252779" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n3" name="n3">
@@ -70,7 +70,7 @@
       <address type="IPv6">2001::3/128</address>
     </interface>
     <alias domain="COREID">3</alias>
-    <point lat="47.56823446" lon="-122.131206263" type="gps"/>
+    <point lat="47.5682749464" lon="-122.131205593" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n4" name="n4">
@@ -83,7 +83,7 @@
       <address type="IPv6">2001::4/128</address>
     </interface>
     <alias domain="COREID">4</alias>
-    <point lat="47.5764954786" lon="-122.131308963" type="gps"/>
+    <point lat="47.5765359649" lon="-122.131308293" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n5" name="n5">
@@ -96,7 +96,7 @@
       <address type="IPv6">2001::5/128</address>
     </interface>
     <alias domain="COREID">5</alias>
-    <point lat="47.5705045637" lon="-122.131547648" type="gps"/>
+    <point lat="47.57054505" lon="-122.131546978" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n6" name="n6">
@@ -109,7 +109,7 @@
       <address type="IPv6">2001::6/128</address>
     </interface>
     <alias domain="COREID">6</alias>
-    <point lat="47.5755915871" lon="-122.131363805" type="gps"/>
+    <point lat="47.5756320734" lon="-122.131363135" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n7" name="n7">
@@ -122,7 +122,7 @@
       <address type="IPv6">2001::7/128</address>
     </interface>
     <alias domain="COREID">7</alias>
-    <point lat="47.5716633592" lon="-122.131289159" type="gps"/>
+    <point lat="47.5717038455" lon="-122.13128849" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n8" name="n8">
@@ -135,7 +135,7 @@
       <address type="IPv6">2001::8/128</address>
     </interface>
     <alias domain="COREID">8</alias>
-    <point lat="47.5744158233" lon="-122.131163854" type="gps"/>
+    <point lat="47.5744563095" lon="-122.131163184" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n9" name="n9">
@@ -148,7 +148,7 @@
       <address type="IPv6">2001::20/128</address>
     </interface>
     <alias domain="COREID">9</alias>
-    <point lat="47.5728098669" lon="-122.131190419" type="gps"/>
+    <point lat="47.5728503532" lon="-122.131189749" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n10" name="n10">
@@ -161,25 +161,25 @@
       <address type="IPv6">2001::9/128</address>
     </interface>
     <alias domain="COREID">10</alias>
-    <point lat="47.5693712486" lon="-122.13160627" type="gps"/>
+    <point lat="47.5694117349" lon="-122.131605601" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n11" name="n11">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">11</alias>
-    <point lat="47.5697731496" lon="-122.108345606" type="gps"/>
+    <point lat="47.5783463317" lon="-122.103472687" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_goal point.png"/>
   </router>
   <router id="n12" name="n12">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">12</alias>
-    <point lat="47.5769200596" lon="-122.110976836" type="gps"/>
+    <point lat="47.5783329923" lon="-122.103492861" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_goal point.png"/>
   </router>
   <router id="n22" name="n22">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">22</alias>
-    <point lat="47.5730120236" lon="-122.125821967" type="gps"/>
+    <point lat="47.5782928181" lon="-122.10353344" type="gps"/>
     <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_goal point.png"/>
   </router>
   <CORE:defaultservices>
@@ -189,6 +189,20 @@
       <service name="vtysh"/>
       <service name="IPForward"/>
       <service name="MyService"/>
+    </device>
+    <device type="router">
+      <service name="zebra"/>
+      <service name="OSPFv2"/>
+      <service name="OSPFv3"/>
+      <service name="vtysh"/>
+      <service name="IPForward"/>
+    </device>
+    <device type="host">
+      <service name="DefaultRoute"/>
+      <service name="SSH"/>
+    </device>
+    <device type="PC">
+      <service name="DefaultRoute"/>
     </device>
   </CORE:defaultservices>
   <CORE:sessionconfig>

@@ -28,7 +28,7 @@ class MyService(CoreService):
     # this controls the starting order vs other enabled services
     _startindex = 50
     # list of startup commands, also may be generated during startup
-    _startup = ('/home/zhiwei/SRSS/strategy.py',)
+    _startup = ('/home/zhiwei/SRSS/strategy.sh',)
     # list of shutdown commands
     _shutdown = ()
 
