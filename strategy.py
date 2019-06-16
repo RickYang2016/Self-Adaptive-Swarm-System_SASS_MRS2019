@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#Author: Zhiwei Luo
+#Author: Zhiwei Luo and Qin Yang
 
 from task import Strategy, NetworkInterface
 from COREDebugger import COREDebuggerVirtual
