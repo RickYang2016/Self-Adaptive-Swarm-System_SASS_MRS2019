@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scenario compiled="true" name="20.xml" version="1.0" xmlns="nmfPlan" xmlns:CORE="coreSpecific">
   <network id="wlan21" name="wlan21">
-    <point lat="47.5784259005" lon="-122.103291808" type="gps"/>
+    <point lat="47.5784663864" lon="-122.103291117" type="gps"/>
     <type>wireless</type>
     <alias domain="COREID">21</alias>
     <member type="interface">n1/eth0</member>
@@ -64,8 +64,8 @@
       <address type="IPv6">2001::1/128</address>
     </interface>
     <alias domain="COREID">1</alias>
-    <point lat="47.572959374" lon="-122.131327558" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5729998603" lon="-122.131326889" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n2" name="n2">
     <type domain="CORE">mdr</type>
@@ -77,8 +77,8 @@
       <address type="IPv6">2001::2/128</address>
     </interface>
     <alias domain="COREID">2</alias>
-    <point lat="47.5727055727" lon="-122.12989575" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5727460589" lon="-122.129895079" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n3" name="n3">
     <type domain="CORE">mdr</type>
@@ -90,8 +90,8 @@
       <address type="IPv6">2001::3/128</address>
     </interface>
     <alias domain="COREID">3</alias>
-    <point lat="47.5693973761" lon="-122.129711228" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5694378624" lon="-122.129710557" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n4" name="n4">
     <type domain="CORE">mdr</type>
@@ -103,8 +103,8 @@
       <address type="IPv6">2001::4/128</address>
     </interface>
     <alias domain="COREID">4</alias>
-    <point lat="47.5747944506" lon="-122.131257317" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5748349369" lon="-122.131256647" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n5" name="n5">
     <type domain="CORE">mdr</type>
@@ -116,8 +116,8 @@
       <address type="IPv6">2001::5/128</address>
     </interface>
     <alias domain="COREID">5</alias>
-    <point lat="47.574595235" lon="-122.129904336" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5746357212" lon="-122.129903665" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n6" name="n6">
     <type domain="CORE">mdr</type>
@@ -129,8 +129,8 @@
       <address type="IPv6">2001::6/128</address>
     </interface>
     <alias domain="COREID">6</alias>
-    <point lat="47.5775913697" lon="-122.129874643" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5776318559" lon="-122.129873972" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n7" name="n7">
     <type domain="CORE">mdr</type>
@@ -142,8 +142,8 @@
       <address type="IPv6">2001::7/128</address>
     </interface>
     <alias domain="COREID">7</alias>
-    <point lat="47.5705320518" lon="-122.129832035" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5705725381" lon="-122.129831364" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n8" name="n8">
     <type domain="CORE">mdr</type>
@@ -155,8 +155,8 @@
       <address type="IPv6">2001::8/128</address>
     </interface>
     <alias domain="COREID">8</alias>
-    <point lat="47.5698552725" lon="-122.131358948" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5698957588" lon="-122.131358278" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n9" name="n9">
     <type domain="CORE">mdr</type>
@@ -168,8 +168,8 @@
       <address type="IPv6">2001::20/128</address>
     </interface>
     <alias domain="COREID">9</alias>
-    <point lat="47.5718792862" lon="-122.131285588" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5719197725" lon="-122.131284919" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n10" name="n10">
     <type domain="CORE">mdr</type>
@@ -181,8 +181,8 @@
       <address type="IPv6">2001::9/128</address>
     </interface>
     <alias domain="COREID">10</alias>
-    <point lat="47.5738270546" lon="-122.130056676" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5738675409" lon="-122.130056006" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n11" name="n11">
     <type domain="CORE">mdr</type>
@@ -194,8 +194,8 @@
       <address type="IPv6">2001::12/128</address>
     </interface>
     <alias domain="COREID">11</alias>
-    <point lat="47.5738629638" lon="-122.131232834" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5739034501" lon="-122.131232164" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n12" name="n12">
     <type domain="CORE">mdr</type>
@@ -207,8 +207,8 @@
       <address type="IPv6">2001::11/128</address>
     </interface>
     <alias domain="COREID">12</alias>
-    <point lat="47.5687619906" lon="-122.131357083" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.568802477" lon="-122.131356413" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n13" name="n13">
     <type domain="CORE">mdr</type>
@@ -220,8 +220,8 @@
       <address type="IPv6">2001::10/128</address>
     </interface>
     <alias domain="COREID">13</alias>
-    <point lat="47.575673961" lon="-122.129766791" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5757144472" lon="-122.12976612" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n14" name="n14">
     <type domain="CORE">mdr</type>
@@ -233,8 +233,8 @@
       <address type="IPv6">2001::19/128</address>
     </interface>
     <alias domain="COREID">14</alias>
-    <point lat="47.575819952" lon="-122.131220408" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5758604383" lon="-122.131219738" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n15" name="n15">
     <type domain="CORE">mdr</type>
@@ -246,8 +246,8 @@
       <address type="IPv6">2001::18/128</address>
     </interface>
     <alias domain="COREID">15</alias>
-    <point lat="47.5767820985" lon="-122.129947889" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5768225847" lon="-122.129947218" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n16" name="n16">
     <type domain="CORE">mdr</type>
@@ -259,8 +259,8 @@
       <address type="IPv6">2001::14/128</address>
     </interface>
     <alias domain="COREID">16</alias>
-    <point lat="47.5776680697" lon="-122.131090103" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.577708556" lon="-122.131089433" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n17" name="n17">
     <type domain="CORE">mdr</type>
@@ -272,8 +272,8 @@
       <address type="IPv6">2001::13/128</address>
     </interface>
     <alias domain="COREID">17</alias>
-    <point lat="47.5716124428" lon="-122.129913858" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5716529291" lon="-122.129913187" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n18" name="n18">
     <type domain="CORE">mdr</type>
@@ -285,8 +285,8 @@
       <address type="IPv6">2001::17/128</address>
     </interface>
     <alias domain="COREID">18</alias>
-    <point lat="47.5708137507" lon="-122.131382985" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5708542371" lon="-122.131382316" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n19" name="n19">
     <type domain="CORE">mdr</type>
@@ -298,8 +298,8 @@
       <address type="IPv6">2001::16/128</address>
     </interface>
     <alias domain="COREID">19</alias>
-    <point lat="47.5684808967" lon="-122.129885955" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.568521383" lon="-122.129885284" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n20" name="n20">
     <type domain="CORE">mdr</type>
@@ -311,23 +311,26 @@
       <address type="IPv6">2001::15/128</address>
     </interface>
     <alias domain="COREID">20</alias>
-    <point lat="47.5767634231" lon="-122.131045232" type="gps"/>
-    <CORE:presentation icon="/home/zhiwei/SRSS/thumbnail_ugv3_40.png"/>
+    <point lat="47.5768039094" lon="-122.131044562" type="gps"/>
+    <CORE:presentation icon="/home/rick/Documents/research/SRSS/thumbnail_ugv3_40.png"/>
   </router>
   <router id="n22" name="n22">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">22</alias>
-    <point lat="47.5784276154" lon="-122.103511193" type="gps"/>
+    <point lat="47.5784681014" lon="-122.103510501" type="gps"/>
+    <CORE:presentation icon="mdr.gif"/>
   </router>
   <router id="n23" name="n23">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">23</alias>
-    <point lat="47.5784001571" lon="-122.103451821" type="gps"/>
+    <point lat="47.5784406431" lon="-122.10345113" type="gps"/>
+    <CORE:presentation icon="mdr.gif"/>
   </router>
   <router id="n24" name="n24">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">24</alias>
-    <point lat="47.5784144319" lon="-122.103551311" type="gps"/>
+    <point lat="47.5784549178" lon="-122.10355062" type="gps"/>
+    <CORE:presentation icon="mdr.gif"/>
   </router>
   <CORE:defaultservices>
     <device type="mdr">
@@ -336,6 +339,20 @@
       <service name="vtysh"/>
       <service name="IPForward"/>
       <service name="MyService"/>
+    </device>
+    <device type="router">
+      <service name="zebra"/>
+      <service name="OSPFv2"/>
+      <service name="OSPFv3"/>
+      <service name="vtysh"/>
+      <service name="IPForward"/>
+    </device>
+    <device type="host">
+      <service name="DefaultRoute"/>
+      <service name="SSH"/>
+    </device>
+    <device type="PC">
+      <service name="DefaultRoute"/>
     </device>
   </CORE:defaultservices>
   <CORE:sessionconfig>

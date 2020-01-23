@@ -1,1 +1,1 @@
-/home/zhiwei/SRSS/strategy.py > my.log
+/home/rick/Documents/research/SRSS/strategy.py > my.log

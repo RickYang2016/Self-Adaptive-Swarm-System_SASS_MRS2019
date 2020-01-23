@@ -1,0 +1,89 @@
+============one round experiment=============
+max battery level cost: 36.33
+min battery level cost: 24.000000000000007
+mean battery level cost: 31.312
+*********************************************
+max battery level cost/per second: 0.2691111111111111
+min battery level cost/per second: 0.17777777777777784
+mean battery level cost/per second: 0.23194074074074075
+============one round experiment=============
+max battery level cost: 36.64
+min battery level cost: 24.53
+mean battery level cost: 31.460499999999996
+*********************************************
+max battery level cost/per second: 0.27140740740740743
+min battery level cost/per second: 0.1817037037037037
+mean battery level cost/per second: 0.23304074074074071
+============one round experiment=============
+max battery level cost: 36.58
+min battery level cost: 23.549999999999997
+mean battery level cost: 31.769
+*********************************************
+max battery level cost/per second: 0.26507246376811594
+min battery level cost/per second: 0.17065217391304346
+mean battery level cost/per second: 0.23021014492753622
+============one round experiment=============
+max battery level cost: 36.86000000000001
+min battery level cost: 24.310000000000002
+mean battery level cost: 31.289499999999997
+*********************************************
+max battery level cost/per second: 0.2614184397163121
+min battery level cost/per second: 0.17241134751773052
+mean battery level cost/per second: 0.22191134751773048
+============one round experiment=============
+max battery level cost: 37.03
+min battery level cost: 23.919999999999995
+mean battery level cost: 31.312
+*********************************************
+max battery level cost/per second: 0.26262411347517733
+min battery level cost/per second: 0.16964539007092194
+mean battery level cost/per second: 0.2220709219858156
+============one round experiment=============
+max battery level cost: 36.19000000000001
+min battery level cost: 23.29
+mean battery level cost: 31.718000000000007
+*********************************************
+max battery level cost/per second: 0.2622463768115943
+min battery level cost/per second: 0.16876811594202898
+mean battery level cost/per second: 0.229840579710145
+============one round experiment=============
+max battery level cost: 36.269999999999996
+min battery level cost: 24.279999999999994
+mean battery level cost: 31.35450000000001
+*********************************************
+max battery level cost/per second: 0.26866666666666666
+min battery level cost/per second: 0.17985185185185182
+mean battery level cost/per second: 0.23225555555555563
+============one round experiment=============
+max battery level cost: 37.04
+min battery level cost: 24.47
+mean battery level cost: 31.478500000000004
+*********************************************
+max battery level cost/per second: 0.2626950354609929
+min battery level cost/per second: 0.17354609929078013
+mean battery level cost/per second: 0.2232517730496454
+============one round experiment=============
+max battery level cost: 36.669999999999995
+min battery level cost: 24.18
+mean battery level cost: 31.325000000000006
+*********************************************
+max battery level cost/per second: 0.26007092198581555
+min battery level cost/per second: 0.17148936170212767
+mean battery level cost/per second: 0.22216312056737594
+============one round experiment=============
+max battery level cost: 36.45
+min battery level cost: 22.86
+mean battery level cost: 31.606
+*********************************************
+max battery level cost/per second: 0.2641304347826087
+min battery level cost/per second: 0.1656521739130435
+mean battery level cost/per second: 0.2290289855072464
+========================system performance============================
+======================================================================
+10 experiments system energy total cost: [626.24, 629.2099999999999, 635.3800000000001, 625.79, 626.2399999999999, 634.3600000000001, 627.0899999999999, 629.57, 626.5, 632.12]
+average system energy total cost: 629.2499999999999
+*********************************************
+10 experiments system energy total cost/per second: [4.638814814814815, 4.660814814814814, 4.604202898550725, 4.4382269503546095, 4.441418439716311, 4.596811594202899, 4.6451111111111105, 4.465035460992908, 4.443262411347518, 4.580579710144928]
+average system energy total cost/per second: 4.551427820605065
+*********************************************
+======================================================================

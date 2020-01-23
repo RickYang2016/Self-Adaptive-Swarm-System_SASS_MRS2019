@@ -80,7 +80,7 @@ class Strategy_SRSS(Strategy):
 		self.network.initSocket()
 		self.network.startReceiveThread()
 		# Debugger tool:
-		self.local_debugger = COREDebuggerVirtual((controlNet, 12888), path='/home/zhiwei/SRSS/log', filename=str(self.local_id))
+		self.local_debugger = COREDebuggerVirtual((controlNet, 12888), path='/home/rick/Documents/research/SRSS/log', filename=str(self.local_id))
 		self.time_start = time.time()
 		self.local_debugger.log_local('Start.', tag='Status')
 		self.local_debugger.send_to_monitor({'id': self.local_id, 'coordinate': self.local_coordinate}, tag='Status')
