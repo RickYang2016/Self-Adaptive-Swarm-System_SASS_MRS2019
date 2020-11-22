@@ -1,2 +1,2 @@
 # SRSS
-Self-Reactive_Swarm-Robots_System
+Self-Adaptive_Swarm_System (SASS)
