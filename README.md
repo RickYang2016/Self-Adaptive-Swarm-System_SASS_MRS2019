@@ -2,15 +2,16 @@
 
 ## Abtract
 Research in multi-robot and swarm systems has seen significant interest in cooperation of agents in complex and dynamic environments. 
-To effectively adapt to unknown environments and maximize the utility of the group, robots need to cooperate, share information, and make a suitable plan according to the specific scenario. Inspired by Maslow's hierarchy of human needs and systems theory, we introduce Robot's Need Hierarchy and propose a new solution called Self-Adaptive Swarm System (SASS). It combines multi-robot perception, communication, planning, and execution with the cooperative management of conflicts through a distributed Negotiation-Agreement Mechanism that prioritizes robot's needs. We also decompose the complex tasks into simple executable behaviors through several Atomic Operations, such as selection, formation, and routing. We evaluate SASS through simulating static and dynamic tasks and comparing them with the state-of-the-art collision-aware task assignment method integrated into our framework.
+To effectively adapt to unknown environments and maximize the utility of the group, robots need to cooperate, share information, and make a suitable plan according to the specific scenario. Inspired by Maslow's hierarchy of human needs and systems theory, we introduce Agent(Robot) Needs Hierarchy and propose a new solution called Self-Adaptive Swarm System (SASS). It combines multi-robot perception, communication, planning, and execution with the cooperative management of conflicts through a distributed Negotiation-Agreement Mechanism that prioritizes robot's needs. We also decompose the complex tasks into simple executable behaviors through several Atomic Operations, such as selection, formation, and routing. We evaluate SASS through simulating static and dynamic tasks and comparing them with the state-of-the-art collision-aware task assignment method integrated into our framework.
 
 > Self-Adaptive_Swarm_System (SASS) original version: [Self-Reactive Swarm-Robotic System (SRSS)](https://ieeexplore.ieee.org/abstract/document/8901075)
 
 > [SMC](http://smc2020.org/) version: [Hierarchical Needs Based Self-Adaptive Framework For Cooperative Multi-Robot System](https://ieeexplore.ieee.org/abstract/document/9283249)
 
-<div align = center>
-<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/robot-needs.png" height="360" alt="Hopper-V2 3SABC"/>
-</div>
+> Agent(Robot) Needs Hierarchy
+    <div align = center>
+    <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/robot-needs.png" height="360" alt="Hopper-V2 3SABC"/>
+    </div>
 
 ## Approach Overview
 We design a simple scenario to implement SASS and distributed algorithms. In our scenarios, a group of swarm robots will cooperate to complete some tasks. Since the tasks are dynamically assigned, the robots need to change their plans and adapt to the new scenario to guarantee the group utility. In our framework, we decompose the complex tasks into a series of  sub-tasks and recursively achieve those sub-tasks until the entire task is completed. Accordingly,  we can divide the task allocation and execution into three steps: selection, formation, and routing. This process can be illustrated as a Behavior Tree that integrates the sense-think-act cycle. The robots are assumed to have low-level motion control and sensor-based perception system for sensing and navigation.
