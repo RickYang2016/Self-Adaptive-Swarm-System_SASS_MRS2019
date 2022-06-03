@@ -1,4 +1,4 @@
-# Hierarchical Needs Based Self-Adaptive Framework For Cooperative Multi-Robot System
+# Hierarchical Needs Based Self-Adaptive_Swarm_System (SASS)
 Self-Adaptive_Swarm_System (SASS) original version Self-Reactive Swarm-Robotic System (SRSS)
 
 Manually Configure CORE
