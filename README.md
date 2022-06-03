@@ -8,6 +8,11 @@ To effectively adapt to unknown environments and maximize the utility of the gro
 
 > [SMC](http://smc2020.org/) version: [Hierarchical Needs Based Self-Adaptive Framework For Cooperative Multi-Robot System](https://ieeexplore.ieee.org/abstract/document/9283249)
 
+## Approach Overview
+<div align = center>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/Overview.png" height="245" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Needs-driven-MRS-Cooperation-SSRR2020/blob/master/figures/overview.gif" height="245" alt="Hopper-V2 3SABC Video"/>
+</div>
+
 ## Evaluation through Simulation Studies
 ### Experiment Setting
 Manually Configure CORE
