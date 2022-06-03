@@ -8,6 +8,10 @@ To effectively adapt to unknown environments and maximize the utility of the gro
 
 > [SMC](http://smc2020.org/) version: [Hierarchical Needs Based Self-Adaptive Framework For Cooperative Multi-Robot System](https://ieeexplore.ieee.org/abstract/document/9283249)
 
+<div align = center>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/robot-needs.png" height="360" alt="Hopper-V2 3SABC"/>
+</div>
+
 ## Approach Overview
 We design a simple scenario to implement SASS and distributed algorithms. In our scenarios, a group of swarm robots will cooperate to complete some tasks. Since the tasks are dynamically assigned, the robots need to change their plans and adapt to the new scenario to guarantee the group utility. In our framework, we decompose the complex tasks into a series of  sub-tasks and recursively achieve those sub-tasks until the entire task is completed. Accordingly,  we can divide the task allocation and execution into three steps: selection, formation, and routing. This process can be illustrated as a Behavior Tree that integrates the sense-think-act cycle. The robots are assumed to have low-level motion control and sensor-based perception system for sensing and navigation.
 
