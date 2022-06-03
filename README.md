@@ -10,7 +10,7 @@ To effectively adapt to unknown environments and maximize the utility of the gro
 
 ## Approach Overview
 <div align = center>
-<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/Overview.png" height="240" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/diagram.png" height="240" alt="Hopper-V2 3SABC Video"/>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/diagram.png" height="230" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/Overview.png" height="230" alt="Hopper-V2 3SABC Video"/>
 </div>
 
 ## Evaluation through Simulation Studies
