@@ -1,6 +1,14 @@
 # Hierarchical Needs Based SASS
-Self-Adaptive_Swarm_System (SASS) original version Self-Reactive Swarm-Robotic System (SRSS)
 
+## Abtract
+Research in multi-robot and swarm systems has seen significant interest in cooperation of agents in complex and dynamic environments. 
+To effectively adapt to unknown environments and maximize the utility of the group, robots need to cooperate, share information, and make a suitable plan according to the specific scenario. Inspired by Maslow's hierarchy of human needs and systems theory, we introduce Robot's Need Hierarchy and propose a new solution called Self-Adaptive Swarm System (SASS). It combines multi-robot perception, communication, planning, and execution with the cooperative management of conflicts through a distributed Negotiation-Agreement Mechanism that prioritizes robot's needs. We also decompose the complex tasks into simple executable behaviors through several Atomic Operations, such as selection, formation, and routing. We evaluate SASS through simulating static and dynamic tasks and comparing them with the state-of-the-art collision-aware task assignment method integrated into our framework.
+
+> Self-Adaptive_Swarm_System (SASS) original version [Self-Reactive Swarm-Robotic System (SRSS)](https://ieeexplore.ieee.org/abstract/document/8901075)
+> SMC version: [Hierarchical Needs Based Self-Adaptive Framework For Cooperative Multi-Robot System](https://ieeexplore.ieee.org/abstract/document/9283249)
+
+## Evaluation through Simulation Studies
+### Experiment Setting
 Manually Configure CORE
 
 If setCORE.sh is not working, follow these steps to manually configure CORE.
