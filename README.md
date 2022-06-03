@@ -1,4 +1,4 @@
-# Hierarchical Needs Based Self-Adaptive_Swarm_System (SASS)
+# Hierarchical Needs Based Self-Adaptive Swarm System
 Self-Adaptive_Swarm_System (SASS) original version Self-Reactive Swarm-Robotic System (SRSS)
 
 Manually Configure CORE
