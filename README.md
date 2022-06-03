@@ -26,6 +26,12 @@ We design a simple scenario to implement SASS and distributed algorithms. In our
 
 ## Evaluation through Simulation Studies
 ### Experiment Setting
+
+
+<div align = center>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/task_decompose.png" height="225" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/setting.gif" height="225" alt="Hopper-V2 3SABC Video"/>
+</div>
+
 Manually Configure CORE
 
 If setCORE.sh is not working, follow these steps to manually configure CORE.
