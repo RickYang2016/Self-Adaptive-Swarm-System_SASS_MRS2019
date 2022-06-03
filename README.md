@@ -99,7 +99,7 @@ add:
 </div>
 
 <div align = center>
-<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/DOPT.gif" height="215" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/SC.gif" height="215" alt="Hopper-V2 3SABC Video"/>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/DOPT.gif" height="215" alt="Hopper-V2 3SABC"/>
 </div>
 
 #### Dynamic Tasks
