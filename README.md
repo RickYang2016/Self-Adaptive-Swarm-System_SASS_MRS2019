@@ -64,3 +64,7 @@ add:
 10.0.0.2	n2
 10.0.0.3	n3
 ....
+
+
+## Conclusion
+Our work introduces a novel SASS framework for cooperation heterogeneous multi-robot systems for dynamic task assignments and automated planning. It combines robot perception, communication, planning, and execution in MRS, which considers individual robot's needs and action plans and emphasizes the complex relationships created through communication between the robots. Specifically, we proposed \textit{Robot's Needs Hierarchy} to model the robot's motivation and offer a priority queue in a distributed \textit{Negotiation-Agreement Mechanism} avoiding plan conflicts effectively. Then, we provide several \textit{Atomic Operations} to decompose the complex tasks into a series of simple sub-tasks. The proposed solution is evaluated through extensive simulations under different static and dynamic task scenarios. The experimental analysis showed that the needs-based cooperation mechanism outperformed state-of-the-art methods in maximizing global team utility and reducing conflicts in planning and negotiation.
