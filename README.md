@@ -109,6 +109,8 @@ add:
 <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/ddpl.gif" height="213" width="379" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/lpdp.gif" height="213" width="379" alt="Hopper-V2 3SABC Video"/>
 </div>
 
+* Note: Check the [Link](https://youtu.be/8RDzjdQPAnU) for the full video.
+
 #### Summary
 <div align = center>
     <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/summary.gif" height="360" width="640" alt="Hopper-V2 3SABC"/>
