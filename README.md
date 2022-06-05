@@ -22,7 +22,7 @@ We design a simple scenario to implement SASS and distributed algorithms. In our
 </div>
 
 <div align = center>
-<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/Overview.png" height="221" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/overview.gif" height="221" alt="Hopper-V2 3SABC Video"/>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/Overview.png" height="210" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/overview.gif" height="210" alt="Hopper-V2 3SABC Video"/>
 </div>
 
 ## Evaluation through Simulation Studies
