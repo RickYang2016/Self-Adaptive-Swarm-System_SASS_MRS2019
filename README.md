@@ -30,7 +30,7 @@ We design a simple scenario to implement SASS and distributed algorithms. In our
 To simulate our framework, we chose to use the [Common Open Research Emulator (CORE)](https://www.nrl.navy.mil/Our-Work/Areas-of-Research/Information-Technology/NCS/CORE/) network simulator since we are interested in implementing our algorithm in a network-based tool as CORE allows dynamic changes in the node/agent mobility and communication. 
 
 <div align = center>
-<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/task_decompose.png" height="245" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/setting.gif" height="245" alt="Hopper-V2 3SABC Video"/>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/task_decompose.png" height="245" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/setting.gif" height="245" width="436" alt="Hopper-V2 3SABC Video"/>
 </div>
 
 #### Manually Configure CORE
@@ -92,26 +92,26 @@ add:
 ### Demonstration
 #### Basic Setting
 <div align = center>
-<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/static.gif" height="213" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/dt.gif" height="213" alt="Hopper-V2 3SABC Video"/>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/static.gif" height="213" width="379" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/dt.gif" height="213" width="379" alt="Hopper-V2 3SABC Video"/>
 </div>
 
 #### Static Tasks
 <div align = center>
-<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/sameE.gif" height="213" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/diffE.gif" height="213" alt="Hopper-V2 3SABC Video"/>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/sameE.gif" height="213" width="379" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/diffE.gif" height="213" width="379" alt="Hopper-V2 3SABC Video"/>
 </div>
 
 <div align = center>
-<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/SC.gif" height="213" alt="Hopper-V2 3SABC Video"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/DOPT.gif" height="213" alt="Hopper-V2 3SABC"/>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/SC.gif" height="213" width="379" alt="Hopper-V2 3SABC Video"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/DOPT.gif" height="213" width="379" alt="Hopper-V2 3SABC"/>
 </div>
 
 #### Dynamic Tasks
 <div align = center>
-<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/ddpl.gif" height="213" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/lpdp.gif" height="213" alt="Hopper-V2 3SABC Video"/>
+<img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/ddpl.gif" height="213" width="379" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/lpdp.gif" height="213" width="379" alt="Hopper-V2 3SABC Video"/>
 </div>
 
 #### Summary
 <div align = center>
-    <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/summary.gif" height="360" alt="Hopper-V2 3SABC"/>
+    <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/summary.gif" height="360" width="640" alt="Hopper-V2 3SABC"/>
 </div>
 
 ## Conclusion
