@@ -94,7 +94,7 @@ add:
 <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/static.gif" height="213" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/dt.gif" height="213" alt="Hopper-V2 3SABC Video"/>
 </div>
 
-### Static Tasks
+#### Static Tasks
 <div align = center>
 <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/sameE.gif" height="213" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/diffE.gif" height="213" alt="Hopper-V2 3SABC Video"/>
 </div>
@@ -103,12 +103,12 @@ add:
 <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/SC.gif" height="213" alt="Hopper-V2 3SABC Video"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/DOPT.gif" height="213" alt="Hopper-V2 3SABC"/>
 </div>
 
-### Dynamic Tasks
+#### Dynamic Tasks
 <div align = center>
 <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/ddpl.gif" height="213" alt="Hopper-V2 3SABC"><img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/lpdp.gif" height="213" alt="Hopper-V2 3SABC Video"/>
 </div>
 
-### Summary
+#### Summary
 <div align = center>
     <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/summary.gif" height="360" alt="Hopper-V2 3SABC"/>
 </div>
