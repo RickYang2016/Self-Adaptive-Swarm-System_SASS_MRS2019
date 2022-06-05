@@ -8,7 +8,7 @@ To effectively adapt to unknown environments and maximize the utility of the gro
 
 > [SMC](http://smc2020.org/) version: [Hierarchical Needs Based Self-Adaptive Framework For Cooperative Multi-Robot System](https://ieeexplore.ieee.org/abstract/document/9283249)
 
-> Agent(Robot) Needs Hierarchy
+> Agent(Robot) Needs Hierarchy and The expectation of Agent Needs at Each Level
     <div align = center>
     <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/robot-needs.png" height="360" alt="Hopper-V2 3SABC">
     <img src="https://github.com/RickYang2016/Self-Adaptive-Swarm-System_SASS_MRS2019/blob/master/figures/needs.png" height="360" alt="Hopper-V2 3SABC"/>
