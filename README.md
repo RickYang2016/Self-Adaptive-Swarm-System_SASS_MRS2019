@@ -1,6 +1,6 @@
 # Hierarchical Needs Based SASS
 
-## Abtract
+## Abstract
 Research in multi-robot and swarm systems has seen significant interest in cooperation of agents in complex and dynamic environments. 
 To effectively adapt to unknown environments and maximize the utility of the group, robots need to cooperate, share information, and make a suitable plan according to the specific scenario. Inspired by Maslow's hierarchy of human needs and systems theory, we introduce Agent(Robot) Needs Hierarchy and propose a new solution called Self-Adaptive Swarm System (SASS). It combines multi-robot perception, communication, planning, and execution with the cooperative management of conflicts through a distributed Negotiation-Agreement Mechanism that prioritizes robot's needs. We also decompose the complex tasks into simple executable behaviors through several Atomic Operations, such as selection, formation, and routing. We evaluate SASS through simulating static and dynamic tasks and comparing them with the state-of-the-art collision-aware task assignment method integrated into our framework.
 
